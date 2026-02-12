@@ -42,10 +42,6 @@ export const useSocket = () => {
       console.error('[Socket.IO] Error parsing BACKEND_URL:', error);
     }
     
-    console.log('[Socket.IO] Backend URL:', BACKEND_URL);
-    console.log('[Socket.IO] Socket origin:', socketOrigin);
-    console.log('[Socket.IO] Socket path:', socketPath);
-    
     socketRef.current = io(socketOrigin, {
       path: socketPath,
       transports: ['websocket', 'polling'],
@@ -55,17 +51,12 @@ export const useSocket = () => {
 
     socket.on('connect', () => {
       setIsConnected(true);
-      console.log('[Socket] Connected successfully');
-      console.log('[Socket] Socket ID:', socket.id);
     });
 
     socket.on('connected', (data) => {
       sessionIdRef.current = data.session_id;
-      console.log('[Socket] Session established:', data.session_id);
-      console.log('[Socket] Server message:', data.message);
       
       const currentPageUrl = getCurrentPageUrl();
-      console.log('[Socket] Setting page context:', currentPageUrl);
       socket.emit('set_page_context', {
         session_id: data.session_id,
         page_url: currentPageUrl
@@ -77,15 +68,12 @@ export const useSocket = () => {
     });
 
     socket.on('disconnect', (reason) => {
-      console.log('[Socket] Disconnected:', reason);
       setIsConnected(false);
     });
 
     socket.on('car_detected', (data) => {
-      console.log('[CAR DETECTED]', data);
       
       if (isProcessingRef.current) {
-        console.log('[CAR DETECTED] Already processing, skipping auto-greeting');
         return;
       }
       
@@ -155,14 +143,12 @@ export const useSocket = () => {
     const pageUrlParam = urlParams.get('page_url');
     
     if (pageUrlParam) {
-      console.log('[URL Detection] URL from query parameter:', pageUrlParam);
       return decodeURIComponent(pageUrlParam);
     }
     
     try {
       if (window.parent && window.parent !== window) {
         const parentUrl = window.parent.location.href;
-        console.log('[URL Detection] URL from parent window:', parentUrl);
         return parentUrl;
       }
     } catch (e) {
@@ -170,7 +156,6 @@ export const useSocket = () => {
     }
     
     const fallbackUrl = window.location.href;
-    console.log('[URL Detection] Using fallback URL:', fallbackUrl);
     return fallbackUrl;
   };
 
@@ -229,7 +214,6 @@ export const useSocket = () => {
   };
 
   const renderUIElement = (data) => {
-    console.log('[UI_ELEMENT] Received:', data);
     removeSkeletonLoader();
     
     setMessages(prev => [...prev, {
@@ -242,13 +226,13 @@ export const useSocket = () => {
 
   const updateStatus = (statusData) => {
     const statusMessages = {
-      'processing': 'Procesando...',
-      'searching_inventory': 'Buscando en inventario...',
-      'booking_appointment': 'Reservando su cita...',
-      'calculating_financing': 'Calculando opciones...'
+      'processing': 'Procesando ...',
+      'searching_inventory': 'Buscando en stock ...',
+      'booking_appointment': 'Reservando su cita ...',
+      'calculating_financing': 'Calculando opciones ...'
     };
     
-    setStatusLabel(statusMessages[statusData.status] || statusData.message || 'Procesando...');
+    setStatusLabel(statusMessages[statusData.status] || statusData.message || 'Procesando ...');
   };
 
   const showSkeletonLoader = () => {
@@ -271,17 +255,12 @@ export const useSocket = () => {
   };
 
   const sendQueuedMessages = () => {
-    console.log('[Queue] Processing queued messages');
-    console.log('[Queue] Queue length:', messageQueueRef.current.length);
-    console.log('[Queue] Is processing:', isProcessingRef.current);
     
     if (messageQueueRef.current.length === 0) {
-      console.log('[Queue] No messages to send');
       return;
     }
     
     if (isProcessingRef.current) {
-      console.log('[Queue] Already processing, skipping');
       return;
     }
     
@@ -289,9 +268,6 @@ export const useSocket = () => {
     
     const combinedMessage = messageQueueRef.current.join('\n');
     messageQueueRef.current = [];
-    
-    console.log('[Queue] Emitting message event:', combinedMessage);
-    console.log('[Queue] Session ID:', sessionIdRef.current);
     
     socketRef.current.emit('message', {
       message: combinedMessage,
@@ -309,9 +285,6 @@ export const useSocket = () => {
   };
 
   const sendMessage = (text) => {
-    console.log('[Send Message] Attempting to send:', text);
-    console.log('[Send Message] Socket connected:', !!socketRef.current?.connected);
-    console.log('[Send Message] Session ID:', sessionIdRef.current);
     
     if (!socketRef.current) {
       console.error('[Send Message] Socket not initialized');
@@ -327,7 +300,6 @@ export const useSocket = () => {
     setMessages(prev => [...prev, { role: 'user', type: 'text', content: text }]);
     
     messageQueueRef.current.push(text);
-    console.log('[Send Message] Message queued, will send in 2 seconds');
     startBatchTimer();
   };
 
