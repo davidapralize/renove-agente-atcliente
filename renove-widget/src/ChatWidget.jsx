@@ -78,7 +78,7 @@ export default function ChatWidget() {
                 if (msg.uiType === 'car_cards') {
                   return (
                     <div key={i} className="ui-element-container">
-                      <CarCarousel cars={msg.data.cars} />
+                      <CarCarousel cars={msg.data.cars} onCarDetails={(name) => sendMessage(`Cuéntame más sobre el ${name}`)} />
                     </div>
                   );
                 }
@@ -131,7 +131,7 @@ export default function ChatWidget() {
                             onError={(e) => { e.target.src = 'https://via.placeholder.com/600x400?text=No+Image'; }}
                           />
                           <div className="image-overlay">
-                            <button className="hover-view-more">
+                            <button className="hover-view-more" onClick={() => sendMessage(`Cuéntame todo sobre el ${carName}`)}>
                               Ver más
                               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                                 <polyline points="9 18 15 12 9 6"></polyline>
