@@ -598,6 +598,31 @@ def execute_tool(tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         filtered_vehicles = filter_vehicles(vehicles, arguments)
         logger.info(f"[TOOL EXECUTION] Filtered vehicles: {len(filtered_vehicles)}")
         
+        display_ids = arguments.get("display_ids")
+        if display_ids and isinstance(display_ids, list):
+            logger.info(f"[TOOL EXECUTION] display_ids provided: {display_ids}")
+            
+            displayed_vehicles = []
+            for display_id in display_ids:
+                matched = False
+                for vehicle in filtered_vehicles:
+                    vehicle_id = vehicle.get("vehicleId", "")
+                    if vehicle_id == display_id or vehicle_id.startswith(display_id):
+                        if vehicle not in displayed_vehicles:
+                            displayed_vehicles.append(vehicle)
+                            logger.info(f"[TOOL EXECUTION] ✓ Including vehicle: {vehicle.get('make')} {vehicle.get('model')} (ID: {vehicle_id})")
+                            matched = True
+                            break
+                
+                if not matched:
+                    logger.warning(f"[TOOL EXECUTION] ⚠ Vehicle ID not found in filtered results: {display_id}")
+            
+            filtered_vehicles = displayed_vehicles
+            logger.info(f"[TOOL EXECUTION] After display_ids filtering: {len(filtered_vehicles)} cars")
+        else:
+            filtered_vehicles = filtered_vehicles[:7]
+            logger.info(f"[TOOL EXECUTION] No display_ids provided, showing first 7 results")
+        
         result = {
             "total_available": api_response.get("totalElements", 0),
             "results_count": len(filtered_vehicles),

@@ -1,66 +1,287 @@
 import { useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 
-// IMPORTANTE: Cambia esto por tu dominio real cuando subas a producción
-// Si estás probando en local, usa http://localhost:8104 o el puerto de tu backend
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+const MESSAGE_BATCH_DELAY = 2000;
 
 export const useSocket = () => {
   const [messages, setMessages] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
+  const [statusLabel, setStatusLabel] = useState('A su servicio');
+  const [isProcessing, setIsProcessing] = useState(false);
+  
   const socketRef = useRef(null);
+  const sessionIdRef = useRef(null);
+  const activeAiMessageRef = useRef(null);
+  const pendingUIElementsRef = useRef([]);
+  const isTextStreamingRef = useRef(false);
+  const isProcessingRef = useRef(false);
+  const messageQueueRef = useRef([]);
+  const messageBatchTimerRef = useRef(null);
+
+  const setProcessing = (value) => {
+    isProcessingRef.current = value;
+    setIsProcessing(value);
+  };
 
   useEffect(() => {
+    const currentPath = window.location.pathname;
+    const basePath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : currentPath;
+    const socketPath = basePath + '/socket.io';
+    
+    console.log('[Socket.IO] Base path:', basePath);
+    console.log('[Socket.IO] Socket path:', socketPath);
+    
     socketRef.current = io(BACKEND_URL, {
-      path: '/socket.io',
-      transports: ['websocket'],
+      path: socketPath,
+      transports: ['websocket', 'polling'],
     });
 
     const socket = socketRef.current;
 
-    socket.on('connect', () => setIsConnected(true));
-    
-    // Streaming de texto
+    socket.on('connect', () => {
+      setIsConnected(true);
+      console.log('[Socket] Connected');
+    });
+
+    socket.on('connected', (data) => {
+      sessionIdRef.current = data.session_id;
+      console.log('Connected:', data.message);
+      
+      const currentPageUrl = getCurrentPageUrl();
+      socket.emit('set_page_context', {
+        session_id: data.session_id,
+        page_url: currentPageUrl
+      });
+    });
+
+    socket.on('car_detected', (data) => {
+      console.log('[CAR DETECTED]', data);
+      
+      if (isProcessingRef.current) {
+        console.log('[CAR DETECTED] Already processing, skipping auto-greeting');
+        return;
+      }
+      
+      setProcessing(true);
+      setMessages(prev => prev.filter(msg => msg.type !== 'welcome'));
+      
+      socket.emit('message', {
+        message: 'Hola',
+        session_id: sessionIdRef.current
+      });
+    });
+
     socket.on('chat_token', (data) => {
-      setIsTyping(true);
       if (data.type === 'text_start') {
-        setMessages(prev => [...prev, { role: 'assistant', type: 'text', content: '' }]);
+        handleStreamStart();
       } else if (data.type === 'text_delta') {
-        setMessages(prev => {
-          const lastMsg = prev[prev.length - 1];
-          if (lastMsg?.role === 'assistant' && lastMsg.type === 'text') {
-            return [...prev.slice(0, -1), { ...lastMsg, content: lastMsg.content + data.token }];
-          }
-          return prev;
-        });
+        handleStreamDelta(data.token);
       } else if (data.type === 'text_complete') {
-        setIsTyping(false);
+        handleStreamComplete();
       }
     });
 
-    // Elementos visuales (Coches, Citas)
     socket.on('ui_element', (data) => {
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        type: 'ui', 
-        uiType: data.type, 
-        data: data.data 
-      }]);
-      setIsTyping(false);
+      if (isTextStreamingRef.current) {
+        pendingUIElementsRef.current.push(data);
+      } else {
+        renderUIElement(data);
+      }
     });
 
     socket.on('status', (data) => {
-      if (data.show_skeleton) setIsTyping(true);
+      if (!isProcessingRef.current) return;
+      
+      updateStatus(data);
+      if (data.show_skeleton && !isTextStreamingRef.current) {
+        showSkeletonLoader();
+      }
     });
 
-    return () => socket.disconnect();
+    socket.on('error', (data) => {
+      console.error('[Socket Error]', data);
+      setMessages(prev => [...prev, {
+        role: 'ai',
+        type: 'text',
+        content: `Error: ${data.message}`,
+        isError: true
+      }]);
+      resetUI();
+    });
+
+    socket.on('message_complete', () => {
+      resetUI();
+      
+      if (messageQueueRef.current.length > 0) {
+        startBatchTimer();
+      }
+    });
+
+    return () => {
+      clearTimeout(messageBatchTimerRef.current);
+      socket.disconnect();
+    };
   }, []);
 
-  const sendMessage = (text) => {
-    setMessages(prev => [...prev, { role: 'user', type: 'text', content: text }]);
-    socketRef.current.emit('message', { message: text });
+  const getCurrentPageUrl = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const pageUrlParam = urlParams.get('page_url');
+    
+    if (pageUrlParam) {
+      console.log('[URL Detection] URL from query parameter:', pageUrlParam);
+      return decodeURIComponent(pageUrlParam);
+    }
+    
+    try {
+      if (window.parent && window.parent !== window) {
+        const parentUrl = window.parent.location.href;
+        console.log('[URL Detection] URL from parent window:', parentUrl);
+        return parentUrl;
+      }
+    } catch (e) {
+      console.log('[URL Detection] Cannot access parent URL (cross-origin)');
+    }
+    
+    const fallbackUrl = window.location.href;
+    console.log('[URL Detection] Using fallback URL:', fallbackUrl);
+    return fallbackUrl;
   };
 
-  return { messages, sendMessage, isConnected, isTyping };
+  const handleStreamStart = () => {
+    if (!isProcessingRef.current) setProcessing(true);
+    
+    setStatusLabel('Escribiendo...');
+    activeAiMessageRef.current = true;
+    isTextStreamingRef.current = true;
+    
+    setMessages(prev => {
+      const filtered = prev.filter(msg => msg.type !== 'welcome');
+      return [...filtered, { role: 'ai', type: 'text', content: '', isStreaming: true }];
+    });
+  };
+
+  const handleStreamDelta = (token) => {
+    if (!activeAiMessageRef.current) return;
+    
+    setMessages(prev => {
+      const idx = prev.findIndex(msg => msg.role === 'ai' && msg.isStreaming);
+      if (idx === -1) return prev;
+      const msg = prev[idx];
+      return [
+        ...prev.slice(0, idx),
+        { ...msg, content: msg.content + token },
+        ...prev.slice(idx + 1)
+      ];
+    });
+  };
+
+  const handleStreamComplete = () => {
+    setMessages(prev => {
+      const idx = prev.findIndex(msg => msg.role === 'ai' && msg.isStreaming);
+      if (idx === -1) return prev;
+      const msg = prev[idx];
+      return [
+        ...prev.slice(0, idx),
+        { ...msg, isStreaming: false },
+        ...prev.slice(idx + 1)
+      ];
+    });
+    
+    setStatusLabel('A su servicio');
+    activeAiMessageRef.current = null;
+    isTextStreamingRef.current = false;
+    
+    if (pendingUIElementsRef.current.length > 0) {
+      pendingUIElementsRef.current.forEach((element, index) => {
+        setTimeout(() => {
+          renderUIElement(element);
+        }, index * 150);
+      });
+      pendingUIElementsRef.current = [];
+    }
+  };
+
+  const renderUIElement = (data) => {
+    console.log('[UI_ELEMENT] Received:', data);
+    removeSkeletonLoader();
+    
+    setMessages(prev => [...prev, {
+      role: 'ai',
+      type: 'ui',
+      uiType: data.type,
+      data: data.data
+    }]);
+  };
+
+  const updateStatus = (statusData) => {
+    const statusMessages = {
+      'processing': 'Procesando...',
+      'searching_inventory': 'Buscando en inventario...',
+      'booking_appointment': 'Reservando su cita...',
+      'calculating_financing': 'Calculando opciones...'
+    };
+    
+    setStatusLabel(statusMessages[statusData.status] || statusData.message || 'Procesando...');
+  };
+
+  const showSkeletonLoader = () => {
+    setMessages(prev => [...prev, {
+      role: 'ai',
+      type: 'ui',
+      uiType: 'skeleton_loader',
+      data: {}
+    }]);
+  };
+
+  const removeSkeletonLoader = () => {
+    setMessages(prev => prev.filter(msg => msg.uiType !== 'skeleton_loader'));
+  };
+
+  const resetUI = () => {
+    setProcessing(false);
+    setStatusLabel('A su servicio');
+    removeSkeletonLoader();
+  };
+
+  const sendQueuedMessages = () => {
+    if (messageQueueRef.current.length === 0 || isProcessingRef.current) return;
+    
+    setProcessing(true);
+    
+    const combinedMessage = messageQueueRef.current.join('\n');
+    messageQueueRef.current = [];
+    
+    socketRef.current.emit('message', {
+      message: combinedMessage,
+      session_id: sessionIdRef.current
+    });
+  };
+
+  const startBatchTimer = () => {
+    clearTimeout(messageBatchTimerRef.current);
+    messageBatchTimerRef.current = setTimeout(() => {
+      if (messageQueueRef.current.length > 0 && !isProcessingRef.current) {
+        sendQueuedMessages();
+      }
+    }, MESSAGE_BATCH_DELAY);
+  };
+
+  const sendMessage = (text) => {
+    if (!socketRef.current || !sessionIdRef.current) return;
+    
+    setMessages(prev => prev.filter(msg => msg.type !== 'welcome'));
+    setMessages(prev => [...prev, { role: 'user', type: 'text', content: text }]);
+    
+    messageQueueRef.current.push(text);
+    startBatchTimer();
+  };
+
+  const onInputChange = () => {
+    if (messageQueueRef.current.length > 0) {
+      startBatchTimer();
+    }
+  };
+
+  return { messages, sendMessage, isConnected, isProcessing, statusLabel, onInputChange };
 };

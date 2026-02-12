@@ -1,10 +1,18 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import ChatWidget from './ChatWidget';
-// EL TRUCO: añadir "?inline" para importar el CSS como texto
 import styles from './index.css?inline'; 
 
 const WIDGET_ID = 'renove-ai-widget-root';
+const FONT_ID = 'renove-ai-widget-font';
+
+if (!document.getElementById(FONT_ID)) {
+  const fontLink = document.createElement('link');
+  fontLink.id = FONT_ID;
+  fontLink.rel = 'stylesheet';
+  fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap';
+  document.head.appendChild(fontLink);
+}
 
 if (!document.getElementById(WIDGET_ID)) {
   const host = document.createElement('div');
@@ -13,12 +21,10 @@ if (!document.getElementById(WIDGET_ID)) {
 
   const shadow = host.attachShadow({ mode: 'open' });
   
-  // 1. Inyectamos los estilos dentro del Shadow DOM
   const styleTag = document.createElement('style');
   styleTag.textContent = styles;
   shadow.appendChild(styleTag);
 
-  // 2. Montamos la app
   const mountPoint = document.createElement('div');
   shadow.appendChild(mountPoint);
 
