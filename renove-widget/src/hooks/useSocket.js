@@ -25,11 +25,22 @@ export const useSocket = () => {
   };
 
   useEffect(() => {
-    const currentPath = window.location.pathname;
-    const basePath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : currentPath;
-    const socketPath = basePath + '/socket.io';
+    let socketPath = '/socket.io';
     
-    console.log('[Socket.IO] Base path:', basePath);
+    try {
+      const url = new URL(BACKEND_URL);
+      let urlPath = url.pathname;
+      if (urlPath.endsWith('/')) {
+        urlPath = urlPath.slice(0, -1);
+      }
+      if (urlPath && urlPath !== '/') {
+        socketPath = urlPath + '/socket.io';
+      }
+    } catch (error) {
+      console.error('[Socket.IO] Error parsing BACKEND_URL:', error);
+    }
+    
+    console.log('[Socket.IO] Backend URL:', BACKEND_URL);
     console.log('[Socket.IO] Socket path:', socketPath);
     
     socketRef.current = io(BACKEND_URL, {
