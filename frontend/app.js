@@ -1,4 +1,13 @@
-const socket = io();
+const currentPath = window.location.pathname;
+const basePath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : currentPath;
+const socketPath = basePath + '/socket.io';
+
+console.log('[Socket.IO] Base path:', basePath);
+console.log('[Socket.IO] Socket path:', socketPath);
+const socket = io({
+    path: socketPath
+});
+
 const chatDisplay = document.getElementById('chat-display');
 const statusLabel = document.getElementById('ai-status');
 const userQueryInput = document.getElementById('user-query');
