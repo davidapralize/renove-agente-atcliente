@@ -1,4 +1,4 @@
-const socket = io('http://localhost:5000');
+const socket = io();
 const chatDisplay = document.getElementById('chat-display');
 const statusLabel = document.getElementById('ai-status');
 const userQueryInput = document.getElementById('user-query');
