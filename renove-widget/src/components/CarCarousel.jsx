@@ -1,182 +1,137 @@
-import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { ChevronRight, ChevronLeft, Calendar, Fuel, Gauge } from 'lucide-react';
+import { useRef, useState, useEffect, useCallback } from 'react';
+
+const FUEL_LABELS = {
+  DIESEL: 'Diesel',
+  GASOLINE: 'Gasolina',
+  ELECTRIC: 'Eléctrico',
+  HYBRID: 'Híbrido',
+  PLUG_IN_HYBRID: 'Híbrido Enchf.',
+  LIQUID_GAS: 'Gas Licuado',
+  HYDROGEN: 'Hidrógeno',
+  NATURAL_GAS: 'Gas Natural',
+  GLP: 'GLP',
+};
+
+const formatFuel = (raw) => {
+  if (!raw) return 'N/D';
+  return FUEL_LABELS[raw.toUpperCase()] || raw;
+};
 
 export const CarCarousel = ({ cars, onCarDetails }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const containerRef = useRef(null);
-  const carouselId = useRef(`carousel-${Date.now()}`);
+  const scrollRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const updateActiveIndex = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el || !cars?.length) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 0) { setActiveIndex(0); return; }
+    const ratio = el.scrollLeft / maxScroll;
+    const idx = Math.round(ratio * (cars.length - 1));
+    setActiveIndex(Math.min(Math.max(idx, 0), cars.length - 1));
+  }, [cars]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', updateActiveIndex, { passive: true });
+    return () => el.removeEventListener('scroll', updateActiveIndex);
+  }, [updateActiveIndex]);
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: direction * 300, behavior: 'smooth' });
+    }
+  };
+
+  const scrollToIndex = (index) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const cardWidth = el.firstElementChild?.offsetWidth || 280;
+    const gap = 16;
+    el.scrollTo({ left: index * (cardWidth + gap), behavior: 'smooth' });
+  };
+
+  const handleViewMore = (e, car) => {
+    e.stopPropagation();
+    const name = `${car.make || ''} ${car.model || ''}`.trim();
+    if (onCarDetails) onCarDetails(name);
+  };
 
   if (!cars?.length) return null;
 
-  const navigateCarousel = (direction) => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const newIndex = (currentIndex + direction + cars.length) % cars.length;
-    
-    const containerEl = container.querySelector('.car-carousel-container');
-    if (containerEl) {
-      containerEl.classList.add('animating');
-      setTimeout(() => {
-        containerEl.classList.remove('animating');
-      }, 900);
-    }
-
-    setCurrentIndex(newIndex);
-  };
-
-  const goToSlide = (targetIndex) => {
-    if (currentIndex === targetIndex) return;
-    
-    const direction = targetIndex > currentIndex ? 1 : -1;
-    const container = containerRef.current;
-    if (!container) return;
-
-    const containerEl = container.querySelector('.car-carousel-container');
-    if (containerEl) {
-      containerEl.classList.add('animating');
-      setTimeout(() => {
-        containerEl.classList.remove('animating');
-      }, 900);
-    }
-
-    setCurrentIndex(targetIndex);
-  };
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        navigateCarousel(-1);
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        navigateCarousel(1);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex]);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    let touchStartX = 0;
-    let touchEndX = 0;
-
-    const containerEl = container.querySelector('.car-carousel-container');
-    if (!containerEl) return;
-
-    const handleTouchStart = (e) => {
-      touchStartX = e.changedTouches[0].screenX;
-    };
-
-    const handleTouchEnd = (e) => {
-      touchEndX = e.changedTouches[0].screenX;
-      handleSwipe();
-    };
-
-    const handleSwipe = () => {
-      const swipeThreshold = 50;
-      const diff = touchStartX - touchEndX;
-      
-      if (Math.abs(diff) > swipeThreshold) {
-        if (diff > 0) {
-          navigateCarousel(1);
-        } else {
-          navigateCarousel(-1);
-        }
-      }
-    };
-
-    containerEl.addEventListener('touchstart', handleTouchStart, { passive: true });
-    containerEl.addEventListener('touchend', handleTouchEnd, { passive: true });
-
-    return () => {
-      containerEl.removeEventListener('touchstart', handleTouchStart);
-      containerEl.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [currentIndex]);
-
-  const formatPrice = (price) => {
-    if (price === null || price === undefined) return 'N/D';
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 0
-    }).format(price);
-  };
-
   return (
-    <div className="car-carousel" id={carouselId.current} ref={containerRef}>
-      <div className="car-carousel-container">
-        {cars.map((car, index) => {
-          const carName = `${car.brand || car.make || ''} ${car.model || ''}`.trim();
-          const isActive = index === currentIndex;
-          const direction = index > currentIndex ? 'right' : 'left';
-          
-          return (
-            <div 
-              key={index} 
-              className={`car-card ${isActive ? 'active slide-in-' + direction : ''}`}
-              data-index={index}
-              style={{ display: isActive ? 'block' : 'none' }}
-            >
-              <div className="car-card-image-container" onClick={() => onCarDetails?.(carName)}>
-                <img 
-                  src={car.image || 'https://via.placeholder.com/400x300?text=No+Image'} 
-                  alt={carName} 
-                  className="car-card-image"
-                  onError={(e) => { e.target.src = 'https://via.placeholder.com/400x300?text=No+Image'; }}
-                />
-                <div className="car-card-overlay">
-                  <span className="car-card-view-more">Ver más</span>
+    <div className="car-carousel">
+
+      <button onClick={() => scroll(-1)} className="carousel-nav carousel-prev">
+        <ChevronLeft size={20} />
+      </button>
+
+      <div ref={scrollRef} className="car-scroll-track">
+        {cars.map((car) => (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            key={car.vehicleId}
+            className="car-card-v2"
+            onClick={() => window.open(car.link, '_blank')}
+          >
+            <div className="car-card-v2-image-wrap">
+              <img
+                src={car.image || 'https://via.placeholder.com/400x300'}
+                alt={car.model}
+                className="car-card-v2-img"
+              />
+              <div className="car-card-v2-gradient"></div>
+
+              <div className="car-card-v2-header">
+                <div className="car-card-v2-title-group">
+                  <span className="car-card-v2-brand">{car.make}</span>
+                  <h3 className="car-card-v2-model">{car.model}</h3>
+                </div>
+                <div className="car-card-v2-price">
+                  {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(car.price)}
                 </div>
               </div>
-              <div className="car-card-info">
-                <div className="car-card-title">{carName || 'Modelo desconocido'}</div>
-                <div className="car-card-stats">
-                  <div className="car-card-stat">
-                    <span className="stat-label">Precio</span>
-                    <span className="stat-value">{formatPrice(car.price)}</span>
-                  </div>
-                  <div className="car-card-stat">
-                    <span className="stat-label">{car.year ? 'Año' : 'Tipo'}</span>
-                    <span className="stat-value">{car.year || car.type || 'N/D'}</span>
-                  </div>
-                  <div className="car-card-stat">
-                    <span className="stat-label">{car.fuel ? 'Combustible' : 'Km'}</span>
-                    <span className="stat-value">{car.fuel || car.mileage || 'N/D'}</span>
-                  </div>
+
+              <button className="car-card-v2-view-more" onClick={(e) => handleViewMore(e, car)}>
+                Ver mas
+              </button>
+
+              <div className="car-card-v2-stats">
+                <div className="car-card-v2-stat">
+                  <Calendar size={18} />
+                  <span>{car.year}</span>
+                </div>
+                <div className="car-card-v2-stat">
+                  <Gauge size={18} />
+                  <span>{car.mileage || 'N/D'}</span>
+                </div>
+                <div className="car-card-v2-stat">
+                  <Fuel size={18} />
+                  <span>{formatFuel(car.specs?.fuel)}</span>
                 </div>
               </div>
             </div>
-          );
-        })}
+          </motion.div>
+        ))}
       </div>
-      {cars.length > 1 && (
-        <>
-          <button className="carousel-nav carousel-prev" onClick={() => navigateCarousel(-1)}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-          </button>
-          <button className="carousel-nav carousel-next" onClick={() => navigateCarousel(1)}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-          </button>
-          <div className="carousel-dots">
-            {cars.map((_, i) => (
-              <span 
-                key={i}
-                className={`carousel-dot ${i === currentIndex ? 'active' : ''}`}
-                onClick={() => goToSlide(i)}
-              ></span>
-            ))}
-          </div>
-        </>
-      )}
+
+      <button onClick={() => scroll(1)} className="carousel-nav carousel-next">
+        <ChevronRight size={20} />
+      </button>
+
+      <div className="carousel-indicators">
+        {cars.map((_, i) => (
+          <button
+            key={i}
+            className={`carousel-indicator ${i === activeIndex ? 'active' : ''}`}
+            onClick={() => scrollToIndex(i)}
+          />
+        ))}
+      </div>
     </div>
   );
 };
