@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-export const CarCarousel = ({ cars }) => {
+export const CarCarousel = ({ cars, onCarDetails }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const containerRef = useRef(null);
   const carouselId = useRef(`carousel-${Date.now()}`);
@@ -122,7 +122,7 @@ export const CarCarousel = ({ cars }) => {
               data-index={index}
               style={{ display: isActive ? 'block' : 'none' }}
             >
-              <div className="car-card-image-container">
+              <div className="car-card-image-container" onClick={() => onCarDetails?.(carName)}>
                 <img 
                   src={car.image || 'https://via.placeholder.com/400x300?text=No+Image'} 
                   alt={carName} 
