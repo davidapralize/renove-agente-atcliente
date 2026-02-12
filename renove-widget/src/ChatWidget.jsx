@@ -36,7 +36,9 @@ export default function ChatWidget() {
             <header className="chat-header">
               <div className="brand-meta">
                 <div className="avatar-status">
-                  <div className="avatar">R</div>
+                  <div className="avatar">
+                    <img src={new URL('../public/renove-logo.png', import.meta.url).href} alt="Renove" className="avatar-logo" />
+                  </div>
                   <span className="status-dot online"></span>
                 </div>
                 <div className="brand-text">
