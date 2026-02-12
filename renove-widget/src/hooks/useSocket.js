@@ -52,18 +52,30 @@ export const useSocket = () => {
 
     socket.on('connect', () => {
       setIsConnected(true);
-      console.log('[Socket] Connected');
+      console.log('[Socket] Connected successfully');
+      console.log('[Socket] Socket ID:', socket.id);
     });
 
     socket.on('connected', (data) => {
       sessionIdRef.current = data.session_id;
-      console.log('Connected:', data.message);
+      console.log('[Socket] Session established:', data.session_id);
+      console.log('[Socket] Server message:', data.message);
       
       const currentPageUrl = getCurrentPageUrl();
+      console.log('[Socket] Setting page context:', currentPageUrl);
       socket.emit('set_page_context', {
         session_id: data.session_id,
         page_url: currentPageUrl
       });
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('[Socket] Connection error:', error);
+    });
+
+    socket.on('disconnect', (reason) => {
+      console.log('[Socket] Disconnected:', reason);
+      setIsConnected(false);
     });
 
     socket.on('car_detected', (data) => {
@@ -256,12 +268,27 @@ export const useSocket = () => {
   };
 
   const sendQueuedMessages = () => {
-    if (messageQueueRef.current.length === 0 || isProcessingRef.current) return;
+    console.log('[Queue] Processing queued messages');
+    console.log('[Queue] Queue length:', messageQueueRef.current.length);
+    console.log('[Queue] Is processing:', isProcessingRef.current);
+    
+    if (messageQueueRef.current.length === 0) {
+      console.log('[Queue] No messages to send');
+      return;
+    }
+    
+    if (isProcessingRef.current) {
+      console.log('[Queue] Already processing, skipping');
+      return;
+    }
     
     setProcessing(true);
     
     const combinedMessage = messageQueueRef.current.join('\n');
     messageQueueRef.current = [];
+    
+    console.log('[Queue] Emitting message event:', combinedMessage);
+    console.log('[Queue] Session ID:', sessionIdRef.current);
     
     socketRef.current.emit('message', {
       message: combinedMessage,
@@ -279,12 +306,25 @@ export const useSocket = () => {
   };
 
   const sendMessage = (text) => {
-    if (!socketRef.current || !sessionIdRef.current) return;
+    console.log('[Send Message] Attempting to send:', text);
+    console.log('[Send Message] Socket connected:', !!socketRef.current?.connected);
+    console.log('[Send Message] Session ID:', sessionIdRef.current);
+    
+    if (!socketRef.current) {
+      console.error('[Send Message] Socket not initialized');
+      return;
+    }
+    
+    if (!sessionIdRef.current) {
+      console.error('[Send Message] No session ID - message blocked');
+      return;
+    }
     
     setMessages(prev => prev.filter(msg => msg.type !== 'welcome'));
     setMessages(prev => [...prev, { role: 'user', type: 'text', content: text }]);
     
     messageQueueRef.current.push(text);
+    console.log('[Send Message] Message queued, will send in 2 seconds');
     startBatchTimer();
   };
 
