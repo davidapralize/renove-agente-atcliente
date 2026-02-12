@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSocket } from './hooks/useSocket';
 import { CarCarousel } from './components/CarCarousel';
+import { BookingConfirmation } from './components/BookingConfirmation';
 import { MessageCircle, X, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { marked } from 'marked';
@@ -44,7 +45,6 @@ export default function ChatWidget() {
                 </div>
               </div>
               <div className="header-actions">
-                 <div className="quality-badge">Premium Elite</div>
                  <button onClick={() => setIsOpen(false)} className="close-btn" aria-label="Cerrar chat">
                     <X size={18} />
                  </button>
@@ -83,96 +83,10 @@ export default function ChatWidget() {
                   );
                 }
                 
-                if (msg.uiType === 'car_viewer') {
-                  const carData = msg.data;
-                  const carName = `${carData.brand || ''} ${carData.model || ''}`.trim();
-                  const specs = carData.specs || {};
-                  
-                  const specLabels = {
-                    hp: 'Potencia',
-                    '0_100_kmh': '0-100 km/h',
-                    top_speed: 'Velocidad máxima',
-                    doors: 'Puertas',
-                    trunk_space: 'Maletero',
-                    safety_rating: 'Seguridad',
-                    fuel_consumption: 'Consumo',
-                    co2_emissions: 'CO2',
-                    environmental_label: 'Etiqueta ECO',
-                    price: 'Precio',
-                    year: 'Año',
-                    mileage: 'Kilometraje',
-                    trim_level: 'Acabado',
-                    equipment: 'Equipamiento',
-                    interior_quality: 'Interior',
-                    maintenance_cost: 'Mantenimiento',
-                    range: 'Autonomía'
-                  };
-                  
-                  const priorities = {
-                    family: ['doors', 'trunk_space', 'safety_rating'],
-                    efficiency: ['fuel_consumption', 'co2_emissions', 'environmental_label'],
-                    performance: ['hp', '0_100_kmh', 'top_speed'],
-                    luxury: ['trim_level', 'equipment', 'interior_quality'],
-                    economy: ['price', 'fuel_consumption', 'maintenance_cost'],
-                    default: ['price', 'year', 'mileage']
-                  };
-                  
-                  const context = carData.context || 'default';
-                  const keysToShow = priorities[context] || priorities.default;
-                  
-                  return (
-                    <div key={i} className="ui-element-container">
-                      <div className="luxury-car-viewer">
-                        <div className="luxury-car-image-wrapper">
-                          <img 
-                            src={carData.image || 'https://via.placeholder.com/600x400?text=No+Image'} 
-                            alt={carName} 
-                            className="luxury-car-image"
-                            onError={(e) => { e.target.src = 'https://via.placeholder.com/600x400?text=No+Image'; }}
-                          />
-                          <div className="image-overlay">
-                            <button className="hover-view-more" onClick={() => sendMessage(`Cuéntame todo sobre el ${carName}`)}>
-                              Ver más
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                                <polyline points="9 18 15 12 9 6"></polyline>
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                        <div className="luxury-car-content">
-                          <h3 className="luxury-car-title">{carName}</h3>
-                          <div className="luxury-specs-row">
-                            {keysToShow.slice(0, 4).map(key => {
-                              if (specs[key]) {
-                                const label = specLabels[key] || key.replace(/_/g, ' ');
-                                return (
-                                  <div key={key} className="luxury-spec-chip">
-                                    <div className="spec-content">
-                                      <span className="spec-chip-label">{label}</span>
-                                      <span className="spec-chip-value">{specs[key]}</span>
-                                    </div>
-                                  </div>
-                                );
-                              }
-                              return null;
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }
-                
                 if (msg.uiType === 'booking_confirmation') {
                   return (
                     <div key={i} className="ui-element-container">
-                      <div className="booking-confirmation">
-                        <h3>Prueba de conducción confirmada</h3>
-                        <p><strong>Vehículo:</strong> {msg.data.model || 'N/D'}</p>
-                        <p><strong>Fecha:</strong> {msg.data.date || 'N/D'}</p>
-                        <p><strong>Hora:</strong> {msg.data.time || 'N/D'}</p>
-                        <p><strong>Confirmación:</strong> {msg.data.confirmation_code || 'N/D'}</p>
-                      </div>
+                      <BookingConfirmation data={msg.data} />
                     </div>
                   );
                 }
