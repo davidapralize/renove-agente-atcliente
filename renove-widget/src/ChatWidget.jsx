@@ -46,11 +46,6 @@ export default function ChatWidget() {
                   <span className="status-label" id="ai-status">{statusLabel || 'A su servicio'}</span>
                 </div>
               </div>
-              <div className="header-actions">
-                 <button onClick={() => setIsOpen(false)} className="close-btn" aria-label="Cerrar chat">
-                    <X size={18} />
-                 </button>
-              </div>
             </header>
 
             <main className="chat-viewport" id="chat-display">
