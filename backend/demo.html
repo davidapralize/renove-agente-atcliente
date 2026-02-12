@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Renove Chatbot Demo</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .chat-container { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); height: 600px; display: flex; flex-direction: column; }
+        .chat-header { padding: 20px; border-bottom: 1px solid #e0e0e0; background: #2563eb; color: white; border-radius: 12px 12px 0 0; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; }
+        .message { margin-bottom: 16px; }
+        .message.user { text-align: right; }
+        .message-content { display: inline-block; padding: 12px 16px; border-radius: 12px; max-width: 70%; }
+        .message.user .message-content { background: #2563eb; color: white; }
+        .message.assistant .message-content { background: #f3f4f6; color: #111; }
+        .status-indicator { padding: 8px 16px; background: #fef3c7; border-left: 3px solid #f59e0b; margin: 16px 0; border-radius: 4px; }
+        .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; height: 80px; border-radius: 8px; margin: 16px 0; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .ui-element { background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; margin: 16px 0; }
+        .car-card { display: flex; gap: 16px; align-items: center; }
+        .car-card img { width: 120px; height: 80px; object-fit: cover; border-radius: 8px; background: #ddd; }
+        .input-container { display: flex; gap: 8px; padding: 16px; border-top: 1px solid #e0e0e0; }
+        .input-container input { flex: 1; padding: 12px; border: 1px solid #e0e0e0; border-radius: 8px; outline: none; }
+        .input-container button { padding: 12px 24px; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; }
+        .input-container button:hover { background: #1d4ed8; }
+        .input-container button:disabled { background: #94a3b8; cursor: not-allowed; }
+
+        .car-viewer-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            background: radial-gradient(circle, #2a2a2a 0%, #000 100%);
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .car-stage {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .impact-car {
+            position: absolute;
+            height: 180px;
+            right: -100%;
+            top: 50%;
+            transform: translateY(-50%);
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+            transition: right 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+            object-fit: contain;
+        }
+
+        .car-viewer-container.active .impact-car {
+            right: 10%;
+        }
+
+        .car-data-card {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            width: 180px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 15px;
+            padding: 15px;
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: all 0.6s ease-out 0.8s;
+        }
+
+        .car-viewer-container.active .car-data-card {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .car-data-card h3 {
+            color: #fff;
+            font-size: 16px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .specs-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .spec-item {
+            margin-bottom: 10px;
+        }
+
+        .spec-label {
+            font-size: 10px;
+            color: #aaa;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .spec-value {
+            font-size: 14px;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .view-details-btn {
+            width: 100%;
+            padding: 8px 12px;
+            background: rgba(37, 99, 235, 0.8);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
+        .view-details-btn:hover {
+            background: rgba(29, 78, 216, 0.9);
+        }
+
+        @media (max-width: 640px) {
+            .car-viewer-container {
+                height: 400px;
+            }
+
+            .impact-car {
+                height: 140px;
+                right: 5%;
+            }
+
+            .car-viewer-container.active .impact-car {
+                right: 50%;
+                transform: translate(50%, -50%);
+                top: 60%;
+            }
+
+            .car-data-card {
+                left: 50%;
+                transform: translateX(-50%) translateX(-20px);
+                top: 20px;
+                width: calc(100% - 40px);
+            }
+
+            .car-viewer-container.active .car-data-card {
+                transform: translateX(-50%) translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-container">
+            <div class="chat-header">
+                <h1>Renove - Asistente Virtual</h1>
+                <p>Conectado - <span id="status">Listo</span></p>
+            </div>
+            <div class="chat-messages" id="messages"></div>
+            <div class="input-container">
+                <input type="text" id="messageInput" placeholder="Escribe tu mensaje..." onkeypress="if(event.key==='Enter') sendMessage()">
+                <button onclick="sendMessage()" id="sendBtn">Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io('http://localhost:5000');
+        const messagesDiv = document.getElementById('messages');
+        const messageInput = document.getElementById('messageInput');
+        const statusSpan = document.getElementById('status');
+        const sendBtn = document.getElementById('sendBtn');
+        
+        let currentMessage = null;
+        let sessionId = null;
+
+        function renderCarViewer(container, carData) {
+            const priorities = {
+                family: ['doors', 'trunk_space', 'safety_rating'],
+                efficiency: ['fuel_consumption', 'co2_emissions', 'range'],
+                performance: ['hp', '0_100_kmh', 'top_speed'],
+                default: ['price', 'year', 'mileage']
+            };
+
+            const context = carData.context || 'default';
+            const keysToShow = priorities[context] || priorities.default;
+            const specs = carData.specs || {};
+            const carName = `${carData.brand || ''} ${carData.model || ''}`.trim();
+
+            let specsHTML = '';
+            keysToShow.forEach(key => {
+                if (specs[key]) {
+                    const label = key.replace(/_/g, ' ');
+                    specsHTML += `
+                        <div class="spec-item">
+                            <span class="spec-label">${label}</span>
+                            <span class="spec-value">${specs[key]}</span>
+                        </div>
+                    `;
+                }
+            });
+
+            container.innerHTML = `
+                <div class="car-viewer-container" id="car-viewer-${Date.now()}">
+                    <div class="car-stage">
+                        <img src="${carData.image || 'https://via.placeholder.com/400x300?text=No+Image'}" 
+                             alt="${carName}" 
+                             class="impact-car"
+                             onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                    </div>
+                    <div class="car-data-card">
+                        <h3>${carName}</h3>
+                        <div class="specs-grid">
+                            ${specsHTML}
+                        </div>
+                        <button class="view-details-btn">Ver Detalles Completos</button>
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => {
+                const viewerContainer = container.querySelector('.car-viewer-container');
+                if (viewerContainer) {
+                    viewerContainer.classList.add('active');
+                }
+            }, 100);
+        }
+        
+        socket.on('connected', (data) => {
+            console.log('Connected:', data);
+            sessionId = data.session_id;
+            statusSpan.textContent = 'Conectado';
+        });
+        
+        socket.on('chat_token', (data) => {
+            if (data.type === 'text_start') {
+                currentMessage = document.createElement('div');
+                currentMessage.className = 'message assistant';
+                currentMessage.innerHTML = '<div class="message-content"></div>';
+                messagesDiv.appendChild(currentMessage);
+            } else if (data.type === 'text_delta') {
+                const content = currentMessage.querySelector('.message-content');
+                content.textContent += data.token;
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+        });
+        
+        socket.on('status', (data) => {
+            statusSpan.textContent = data.message;
+            
+            if (data.show_skeleton) {
+                const skeleton = document.createElement('div');
+                skeleton.className = 'skeleton';
+                skeleton.id = 'skeleton-' + Date.now();
+                messagesDiv.appendChild(skeleton);
+            }
+        });
+        
+        socket.on('ui_element', (data) => {
+            console.log('[UI_ELEMENT] Received:', data);
+            
+            const skeletons = document.querySelectorAll('.skeleton');
+            skeletons.forEach(s => s.remove());
+            
+            const uiElement = document.createElement('div');
+            
+            if (data.type === 'car_viewer' && data.data) {
+                console.log('[UI_ELEMENT] Rendering car_viewer');
+                renderCarViewer(uiElement, data.data);
+            } else if (data.type === 'car_cards' && data.data.cars) {
+                console.log('[UI_ELEMENT] Rendering car_cards');
+                uiElement.className = 'ui-element';
+                data.data.cars.forEach(car => {
+                    const carBrand = car.brand || car.make || '';
+                    const carImage = (car.images && car.images[0]) || car.image || 'https://via.placeholder.com/120x80?text=No+Image';
+                    const carPrice = car.price ? `€${car.price.toLocaleString()}` : 'Price on request';
+                    const fuel = car.specs?.fuel || 'N/A';
+                    const transmission = car.specs?.transmission || 'N/A';
+                    
+                    uiElement.innerHTML += `
+                        <div class="car-card">
+                            <img src="${carImage}" alt="${carBrand} ${car.model}" onerror="this.src='https://via.placeholder.com/120x80?text=No+Image'">
+                            <div>
+                                <h3>${carBrand} ${car.model} (${car.year})</h3>
+                                <p><strong>Precio:</strong> ${carPrice}</p>
+                                <p><strong>Combustible:</strong> ${fuel} | <strong>Transmisión:</strong> ${transmission}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                console.log('[UI_ELEMENT] Rendering default (JSON)');
+                uiElement.className = 'ui-element';
+                uiElement.innerHTML = `<pre>${JSON.stringify(data.data, null, 2)}</pre>`;
+            }
+            
+            messagesDiv.appendChild(uiElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        });
+        
+        socket.on('message_complete', () => {
+            statusSpan.textContent = 'Listo';
+            sendBtn.disabled = false;
+            const skeletons = document.querySelectorAll('.skeleton');
+            skeletons.forEach(s => s.remove());
+        });
+        
+        socket.on('error', (data) => {
+            console.error('Error:', data);
+            statusSpan.textContent = 'Error: ' + data.message;
+            sendBtn.disabled = false;
+        });
+        
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+            
+            const userMsg = document.createElement('div');
+            userMsg.className = 'message user';
+            userMsg.innerHTML = `<div class="message-content">${message}</div>`;
+            messagesDiv.appendChild(userMsg);
+            
+            socket.emit('message', { message, session_id: sessionId });
+            
+            messageInput.value = '';
+            sendBtn.disabled = true;
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+    </script>
+</body>
+</html>

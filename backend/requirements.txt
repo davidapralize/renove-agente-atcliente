@@ -1,0 +1,11 @@
+flask
+flask-socketio
+flask-cors
+openai>=2.20.0
+python-dotenv
+pydantic-settings
+eventlet
+python-socketio[client]
+gunicorn
+typing-extensions
+requests

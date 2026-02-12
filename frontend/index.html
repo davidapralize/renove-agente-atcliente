@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Renove AI - Asistente Virtual</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="page-loader" id="page-loader">
+        <div class="loader-content">
+            <div class="loader-ring"></div>
+            <div class="loader-text">RENOVE</div>
+        </div>
+    </div>
+    <div class="renove-chat-wrapper" id="chat-wrapper">
+        <header class="chat-header">
+            <div class="brand-meta">
+                <div class="avatar-status">
+                    <div class="avatar">R</div>
+                    <span class="status-dot online"></span>
+                </div>
+                <div class="brand-text">
+                    <span class="name">Renove AI</span>
+                    <span class="status-label" id="ai-status">A su servicio</span>
+                </div>
+            </div>
+            <div class="quality-badge">
+                Premium Elite
+            </div>
+        </header>
+
+        <main id="chat-display" class="chat-viewport">
+            <div class="welcome-message">
+                <h2>Bienvenido a Renove Elite</h2>
+                <p>Tu asesor de élite. Explora nuestra colección exclusiva, obtén asesoramiento personalizado y encuentra el coche de tus sueños.</p>
+            </div>
+        </main>
+
+        <footer class="chat-input-container">
+            <input type="text" id="user-query" placeholder="¿En qué puedo ayudarte?" autocomplete="off">
+            <button id="btn-send" aria-label="Enviar mensaje">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </footer>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
