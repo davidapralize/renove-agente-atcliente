@@ -26,9 +26,11 @@ export const useSocket = () => {
 
   useEffect(() => {
     let socketPath = '/socket.io';
+    let socketOrigin = BACKEND_URL;
     
     try {
       const url = new URL(BACKEND_URL);
+      socketOrigin = url.origin;
       let urlPath = url.pathname;
       if (urlPath.endsWith('/')) {
         urlPath = urlPath.slice(0, -1);
@@ -41,9 +43,10 @@ export const useSocket = () => {
     }
     
     console.log('[Socket.IO] Backend URL:', BACKEND_URL);
+    console.log('[Socket.IO] Socket origin:', socketOrigin);
     console.log('[Socket.IO] Socket path:', socketPath);
     
-    socketRef.current = io(BACKEND_URL, {
+    socketRef.current = io(socketOrigin, {
       path: socketPath,
       transports: ['websocket', 'polling'],
     });
