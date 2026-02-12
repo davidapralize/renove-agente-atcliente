@@ -1244,21 +1244,15 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-.booking-confirmation-modern::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: inherit;
-    background-color: transparent;
-    opacity: 0.15;
-    z-index: 0;
-}
-
 .booking-confirmation-modern::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(10, 10, 10, 0.85);
+    background: linear-gradient(
+        to bottom,
+        rgba(10, 10, 10, 0.75) 0%,
+        rgba(10, 10, 10, 0.9) 100%
+    );
     z-index: 1;
 }
 
@@ -1266,8 +1260,11 @@
     position: relative;
     z-index: 2;
     text-align: center;
-    padding: 30px;
+    padding: 24px 30px;
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .booking-success-icon {
@@ -1278,7 +1275,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 8px auto 16px;
+    margin: 0 auto 16px;
+    flex-shrink: 0;
     color: white;
     box-shadow: 
         0 0 0 6px rgba(168, 0, 0, 0.2),
