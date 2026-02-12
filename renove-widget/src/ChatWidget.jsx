@@ -22,18 +22,17 @@ export default function ChatWidget() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[99999] font-sans">
+    <div className="chat-widget-container">
       <AnimatePresence>
         {isOpen && (
           <motion.div 
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="renove-chat-wrapper !h-[650px] !w-[400px] !max-w-[90vw] !m-0 flex flex-col shadow-2xl"
-            style={{ position: 'relative', transform: 'none', animation: 'none' }}
+            className="renove-chat-wrapper"
           >
             {/* Header */}
-            <header className="chat-header shrink-0">
+            <header className="chat-header">
               <div className="brand-meta">
                 <div className="avatar-status">
                   <div className="avatar">R</div>
@@ -44,13 +43,13 @@ export default function ChatWidget() {
                   <span className="status-label">A su servicio</span>
                 </div>
               </div>
-              <button onClick={() => setIsOpen(false)} className="text-white/50 hover:text-white transition-colors">
+              <button onClick={() => setIsOpen(false)} className="close-btn">
                 <X size={20} />
               </button>
             </header>
 
             {/* Viewport */}
-            <main className="chat-viewport flex-1 overflow-y-auto p-4 space-y-4">
+            <main className="chat-viewport">
               {messages.length === 0 && (
                 <div className="welcome-message">
                    <h2>Bienvenido a Renove</h2>
@@ -59,16 +58,16 @@ export default function ChatWidget() {
               )}
               
               {messages.map((msg, i) => (
-                <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                <div key={i} className={`message-row ${msg.role === 'user' ? 'row-user' : 'row-ai'}`}>
                   {msg.type === 'text' ? (
                     <div 
-                      className={`message-bubble ${msg.role === 'user' ? 'user-msg' : 'ai-msg'} !max-w-[90%]`}
+                      className={`message-bubble ${msg.role === 'user' ? 'user-msg' : 'ai-msg'}`}
                       dangerouslySetInnerHTML={{ __html: marked.parse(msg.content) }}
                     />
                   ) : msg.uiType === 'car_cards' ? (
                     <CarCarousel cars={msg.data.cars} />
                   ) : msg.uiType === 'booking_confirmation' ? (
-                    <div className="booking-confirmation w-full">
+                    <div className="booking-confirmation">
                       <h3>¡Cita Confirmada!</h3>
                       <p>Código: <strong>{msg.data.confirmation_code}</strong></p>
                       <p>Fecha: {msg.data.date} - {msg.data.time}</p>
@@ -78,17 +77,15 @@ export default function ChatWidget() {
               ))}
 
               {isTyping && (
-                 <div className="message-bubble ai-msg w-16 flex items-center justify-center gap-1 py-4">
-                    <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce"></span>
-                    <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce delay-100"></span>
-                    <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce delay-200"></span>
+                 <div className="message-bubble ai-msg typing-indicator">
+                    <span>.</span><span>.</span><span>.</span>
                  </div>
               )}
               <div ref={messagesEndRef} />
             </main>
 
             {/* Input */}
-            <footer className="chat-input-container shrink-0">
+            <footer className="chat-input-container">
               <input 
                 type="text" 
                 id="user-query" 
@@ -110,9 +107,9 @@ export default function ChatWidget() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 rounded-full bg-gradient-to-br from-[#a80000] to-[#7a0000] text-white shadow-xl flex items-center justify-center border border-[#ff1a1a] absolute bottom-0 right-0 z-50"
+        className="chat-toggle-btn"
       >
-        {isOpen ? <X size={24} /> : <MessageCircle size={28} />}
+        {isOpen ? <X size={28} /> : <MessageCircle size={28} />}
       </motion.button>
     </div>
   );
