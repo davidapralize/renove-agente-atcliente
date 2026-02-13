@@ -309,5 +309,23 @@ export const useSocket = () => {
     }
   };
 
-  return { messages, sendMessage, isConnected, isProcessing, statusLabel, onInputChange };
+  const sendSilentMessage = (text) => {
+    if (!socketRef.current || !sessionIdRef.current) {
+      return;
+    }
+    
+    if (isProcessingRef.current) {
+      return;
+    }
+    
+    setProcessing(true);
+    setMessages(prev => prev.filter(msg => msg.type !== 'welcome'));
+    
+    socketRef.current.emit('message', {
+      message: text,
+      session_id: sessionIdRef.current
+    });
+  };
+
+  return { messages, sendMessage, sendSilentMessage, isConnected, isProcessing, statusLabel, onInputChange };
 };
