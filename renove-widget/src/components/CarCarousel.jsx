@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ChevronRight, ChevronLeft, Calendar, Fuel, Gauge } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Calendar, Fuel, Gauge, DollarSign, Zap, Users, Car, Square, Palette, Leaf, Shield } from 'lucide-react';
 import { useRef, useState, useEffect, useCallback } from 'react';
 
 const FUEL_LABELS = {
@@ -19,9 +19,112 @@ const formatFuel = (raw) => {
   return FUEL_LABELS[raw.toUpperCase()] || raw;
 };
 
-export const CarCarousel = ({ cars, onCarDetails }) => {
+const BODY_STYLE_LABELS = {
+  BERLINA: 'Berlina',
+  CABRIO: 'Cabrio',
+  COMPACTO: 'Compacto',
+  COUPE: 'Coupé',
+  CUATRO_POR_CUATRO_SUV: 'SUV',
+  FAMILIAR: 'Familiar',
+  MONOVOLUMEN: 'Monovolumen',
+  SUV5P: 'SUV',
+  PICK_UP: 'Pick-up'
+};
+
+const formatBodyStyle = (raw) => {
+  if (!raw) return 'N/D';
+  return BODY_STYLE_LABELS[raw.toUpperCase()] || raw;
+};
+
+const STAT_CONFIG = {
+  price: {
+    icon: DollarSign,
+    format: (car) => {
+      if (!car.price) return 'N/D';
+      return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(car.price);
+    }
+  },
+  year: {
+    icon: Calendar,
+    format: (car) => car.year || 'N/D'
+  },
+  mileage: {
+    icon: Gauge,
+    format: (car) => car.mileage || 'N/D'
+  },
+  fuel: {
+    icon: Fuel,
+    format: (car) => formatFuel(car.specs?.fuel)
+  },
+  transmission: {
+    icon: Shield,
+    format: (car) => {
+      const trans = car.specs?.transmission;
+      if (!trans) return 'N/D';
+      return trans === 'M' ? 'Manual' : trans === 'A' ? 'Automático' : trans;
+    }
+  },
+  power: {
+    icon: Zap,
+    format: (car) => {
+      const power = car.specs?.power;
+      return power ? `${power} CV` : 'N/D';
+    }
+  },
+  seats: {
+    icon: Users,
+    format: (car) => {
+      const seats = car.specs?.seats;
+      return seats ? `${seats} plazas` : 'N/D';
+    }
+  },
+  doors: {
+    icon: Square,
+    format: (car) => {
+      const doors = car.specs?.doors;
+      return doors ? `${doors} puertas` : 'N/D';
+    }
+  },
+  body_style: {
+    icon: Car,
+    format: (car) => formatBodyStyle(car.specs?.body_style)
+  },
+  ecological_label: {
+    icon: Leaf,
+    format: (car) => {
+      const label = car.specs?.ecological_label;
+      if (!label) return 'N/D';
+      return label === '0' || label.toUpperCase() === 'CERO' ? 'Cero emisiones' : `Etiqueta ${label}`;
+    }
+  },
+  color: {
+    icon: Palette,
+    format: (car) => car.specs?.color || 'N/D'
+  }
+};
+
+export const CarCarousel = ({ cars, priorityStats, onCarDetails }) => {
   const scrollRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  
+  const statsToDisplay = priorityStats && priorityStats.length === 3 
+    ? priorityStats 
+    : ['year', 'mileage', 'fuel'];
+  
+  const renderStat = (statKey, car) => {
+    const config = STAT_CONFIG[statKey];
+    if (!config) return null;
+    
+    const Icon = config.icon;
+    const value = config.format(car);
+    
+    return (
+      <div key={statKey} className="car-card-v2-stat">
+        <Icon size={18} />
+        <span>{value}</span>
+      </div>
+    );
+  };
 
   const updateActiveIndex = useCallback(() => {
     const el = scrollRef.current;
@@ -101,18 +204,7 @@ export const CarCarousel = ({ cars, onCarDetails }) => {
               </button>
 
               <div className="car-card-v2-stats">
-                <div className="car-card-v2-stat">
-                  <Calendar size={18} />
-                  <span>{car.year}</span>
-                </div>
-                <div className="car-card-v2-stat">
-                  <Gauge size={18} />
-                  <span>{car.mileage || 'N/D'}</span>
-                </div>
-                <div className="car-card-v2-stat">
-                  <Fuel size={18} />
-                  <span>{formatFuel(car.specs?.fuel)}</span>
-                </div>
+                {statsToDisplay.map(statKey => renderStat(statKey, car))}
               </div>
             </div>
           </motion.div>
