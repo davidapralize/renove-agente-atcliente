@@ -16,7 +16,6 @@ export default function ChatWidget() {
   const lastScrolledAiIndexRef = useRef(-1);
   const inputRef = useRef(null);
   const scrollPosRef = useRef(0);
-  const isAutoScrollingRef = useRef(false);
 
   useEffect(() => {
     const viewport = chatViewportRef.current;
@@ -35,29 +34,28 @@ export default function ChatWidget() {
 
     if (lastMessage.role === 'user' || lastMessage.uiType === 'skeleton_loader') {
       if (lastMessage.role === 'user') lastScrolledAiIndexRef.current = -1;
-      isAutoScrollingRef.current = true;
       requestAnimationFrame(() => {
         viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
-        isAutoScrollingRef.current = false;
       });
       return;
     }
 
     if (lastMessage.role === 'ai' && lastMessage.isStreaming && lastScrolledAiIndexRef.current !== lastIndex) {
       lastScrolledAiIndexRef.current = lastIndex;
-      isAutoScrollingRef.current = true;
-      requestAnimationFrame(() => {
-        if (aiStreamingRef.current) {
-          viewport.scrollTo({ top: aiStreamingRef.current.offsetTop, behavior: 'smooth' });
-        }
-        isAutoScrollingRef.current = false;
-      });
+      if (aiStreamingRef.current) {
+        viewport.scrollTop = aiStreamingRef.current.offsetTop;
+        scrollPosRef.current = viewport.scrollTop;
+      }
       return;
     }
 
-    if (!isAutoScrollingRef.current) {
-      viewport.scrollTop = scrollPosRef.current;
-    }
+    const savedPos = scrollPosRef.current;
+    viewport.scrollTop = savedPos;
+    requestAnimationFrame(() => {
+      if (viewport.scrollTop !== savedPos) {
+        viewport.scrollTop = savedPos;
+      }
+    });
   }, [messages]);
 
   useEffect(() => {
