@@ -14,6 +14,7 @@ export default function ChatWidget() {
   const chatOpenedRef = useRef(false);
   const shouldScrollRef = useRef(true);
   const aiStreamingRef = useRef(null);
+  const lastAiMessageIdRef = useRef(null);
 
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
@@ -35,6 +36,14 @@ export default function ChatWidget() {
     if (lastMessage.role === 'ai' && lastMessage.isStreaming) {
       aiStreamingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       shouldScrollRef.current = false;
+    }
+
+    if (lastMessage.role === 'ai' && !lastMessage.isStreaming && lastMessage.type === 'text') {
+      const messageId = `${lastMessage.content.substring(0, 50)}-${messages.length - 1}`;
+      if (lastAiMessageIdRef.current !== messageId) {
+        lastAiMessageIdRef.current = messageId;
+        aiStreamingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
   }, [messages]);
 
@@ -83,6 +92,13 @@ export default function ChatWidget() {
                   <span className="status-label" id="ai-status">{statusLabel || 'A su servicio'}</span>
                 </div>
               </div>
+              <button 
+                className="mobile-close-btn" 
+                onClick={() => setIsOpen(false)}
+                aria-label="Cerrar chat"
+              >
+                <X size={24} />
+              </button>
             </header>
 
             <main className="chat-viewport" id="chat-display">
@@ -203,7 +219,7 @@ export default function ChatWidget() {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="chat-toggle-btn"
+        className={`chat-toggle-btn ${isOpen ? 'chat-open' : ''}`}
         aria-label={isOpen ? 'Cerrar chat' : 'Abrir chat'}
       >
         {isOpen ? <X size={28} /> : <MessageCircle size={28} />}
