@@ -14,6 +14,8 @@ export default function ChatWidget() {
   const chatOpenedRef = useRef(false);
   const aiStreamingRef = useRef(null);
   const lastScrolledAiIndexRef = useRef(-1);
+  const inputRef = useRef(null);
+  const wrapperRef = useRef(null);
 
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
@@ -38,6 +40,27 @@ export default function ChatWidget() {
   }, [messages]);
 
   useEffect(() => {
+    if (!isOpen || !wrapperRef.current) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const isMobile = () => window.innerWidth <= 500;
+
+    const handleResize = () => {
+      if (wrapperRef.current && isMobile()) {
+        wrapperRef.current.style.height = `${vv.height}px`;
+      }
+    };
+
+    vv.addEventListener('resize', handleResize);
+    return () => {
+      vv.removeEventListener('resize', handleResize);
+      if (wrapperRef.current) {
+        wrapperRef.current.style.height = '';
+      }
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
     if (isOpen && !chatOpenedRef.current) {
       chatOpenedRef.current = true;
       if (messages.length === 0 && !isProcessing) {
@@ -56,6 +79,7 @@ export default function ChatWidget() {
     if (!input.trim()) return;
     sendMessage(input);
     setInput('');
+    inputRef.current?.blur();
   };
 
   return (
@@ -68,6 +92,7 @@ export default function ChatWidget() {
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="renove-chat-wrapper"
+            ref={wrapperRef}
           >
             <header className="chat-header">
               <div className="brand-meta">
@@ -185,6 +210,7 @@ export default function ChatWidget() {
 
             <footer className="chat-input-container">
               <input 
+                ref={inputRef}
                 type="text" 
                 id="user-query" 
                 placeholder="¿En qué puedo ayudarte?" 
