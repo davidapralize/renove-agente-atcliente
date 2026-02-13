@@ -9,7 +9,6 @@ export const useSocket = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [statusLabel, setStatusLabel] = useState('A su servicio');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showSkeleton, setShowSkeleton] = useState(false);
   
   const socketRef = useRef(null);
   const sessionIdRef = useRef(null);
@@ -271,11 +270,16 @@ export const useSocket = () => {
   };
 
   const showSkeletonLoader = () => {
-    setShowSkeleton(true);
+    setMessages(prev => [...prev, {
+      role: 'ai',
+      type: 'ui',
+      uiType: 'skeleton_loader',
+      data: {}
+    }]);
   };
 
   const removeSkeletonLoader = () => {
-    setShowSkeleton(false);
+    setMessages(prev => prev.filter(msg => msg.uiType !== 'skeleton_loader'));
   };
 
   const resetUI = () => {
@@ -357,5 +361,5 @@ export const useSocket = () => {
     });
   };
 
-  return { messages, sendMessage, sendSilentMessage, isConnected, isProcessing, statusLabel, onInputChange, showSkeleton };
+  return { messages, sendMessage, sendSilentMessage, isConnected, isProcessing, statusLabel, onInputChange };
 };
