@@ -12,16 +12,17 @@ export default function ChatWidget() {
   const [input, setInput] = useState('');
   const chatViewportRef = useRef(null);
   const chatOpenedRef = useRef(false);
-  const aiStreamingRef = useRef(null);
   const lastScrolledAiIndexRef = useRef(-1);
   const inputRef = useRef(null);
-  const scrollPosRef = useRef(0);
-  const isAutoScrollingRef = useRef(false);
+  const isNearBottomRef = useRef(true);
 
   useEffect(() => {
     const viewport = chatViewportRef.current;
     if (!viewport) return;
-    const onScroll = () => { scrollPosRef.current = viewport.scrollTop; };
+    const onScroll = () => {
+      isNearBottomRef.current =
+        viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 150;
+    };
     viewport.addEventListener('scroll', onScroll, { passive: true });
     return () => viewport.removeEventListener('scroll', onScroll);
   }, [isOpen]);
@@ -35,28 +36,24 @@ export default function ChatWidget() {
 
     if (lastMessage.role === 'user' || lastMessage.uiType === 'skeleton_loader') {
       if (lastMessage.role === 'user') lastScrolledAiIndexRef.current = -1;
-      isAutoScrollingRef.current = true;
+      isNearBottomRef.current = true;
       requestAnimationFrame(() => {
         viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
-        isAutoScrollingRef.current = false;
       });
       return;
     }
 
     if (lastMessage.role === 'ai' && lastMessage.isStreaming && lastScrolledAiIndexRef.current !== lastIndex) {
       lastScrolledAiIndexRef.current = lastIndex;
-      isAutoScrollingRef.current = true;
+      isNearBottomRef.current = true;
       requestAnimationFrame(() => {
-        if (aiStreamingRef.current) {
-          viewport.scrollTo({ top: aiStreamingRef.current.offsetTop, behavior: 'smooth' });
-        }
-        isAutoScrollingRef.current = false;
+        viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
       });
       return;
     }
 
-    if (!isAutoScrollingRef.current) {
-      viewport.scrollTop = scrollPosRef.current;
+    if (isNearBottomRef.current) {
+      viewport.scrollTop = viewport.scrollHeight;
     }
   }, [messages]);
 
@@ -124,7 +121,6 @@ export default function ChatWidget() {
                   return (
                     <div 
                       key={i}
-                      ref={msg.isStreaming ? aiStreamingRef : null}
                       className={`message-bubble ${msg.role === 'user' ? 'user-msg' : 'ai-msg'} ${msg.isStreaming ? 'is-streaming' : ''}`}
                     >
                       <span className="text-content" dangerouslySetInnerHTML={{ __html: marked.parse(msg.content) }} />
