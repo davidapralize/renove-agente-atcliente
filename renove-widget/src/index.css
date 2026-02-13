@@ -346,6 +346,7 @@
     gap: 18px;
     position: relative;
     box-shadow: none;
+    overflow-anchor: none;
 }
 
 .chat-viewport::before {
