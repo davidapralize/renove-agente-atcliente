@@ -12,38 +12,28 @@ export default function ChatWidget() {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef(null);
   const chatOpenedRef = useRef(false);
-  const shouldScrollRef = useRef(true);
   const aiStreamingRef = useRef(null);
-  const lastAiMessageIdRef = useRef(null);
+  const lastScrolledAiIndexRef = useRef(-1);
 
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
     if (!lastMessage) return;
+    const lastIndex = messages.length - 1;
 
     if (lastMessage.role === 'user') {
-      shouldScrollRef.current = true;
+      lastScrolledAiIndexRef.current = -1;
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       return;
     }
-
-    if (!shouldScrollRef.current) return;
 
     if (lastMessage.uiType === 'skeleton_loader') {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       return;
     }
 
-    if (lastMessage.role === 'ai' && lastMessage.isStreaming) {
+    if (lastMessage.role === 'ai' && lastMessage.isStreaming && lastScrolledAiIndexRef.current !== lastIndex) {
+      lastScrolledAiIndexRef.current = lastIndex;
       aiStreamingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      shouldScrollRef.current = false;
-    }
-
-    if (lastMessage.role === 'ai' && !lastMessage.isStreaming && lastMessage.type === 'text') {
-      const messageId = `${lastMessage.content.substring(0, 50)}-${messages.length - 1}`;
-      if (lastAiMessageIdRef.current !== messageId) {
-        lastAiMessageIdRef.current = messageId;
-        aiStreamingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
     }
   }, [messages]);
 
@@ -69,7 +59,7 @@ export default function ChatWidget() {
   };
 
   return (
-    <div className="chat-widget-container">
+    <div className={`chat-widget-container ${isOpen ? 'chat-open' : ''}`}>
       <AnimatePresence>
         {isOpen && (
           <motion.div 
@@ -92,12 +82,8 @@ export default function ChatWidget() {
                   <span className="status-label" id="ai-status">{statusLabel || 'A su servicio'}</span>
                 </div>
               </div>
-              <button 
-                className="mobile-close-btn" 
-                onClick={() => setIsOpen(false)}
-                aria-label="Cerrar chat"
-              >
-                <X size={24} />
+              <button className="header-close-btn" onClick={() => setIsOpen(false)} aria-label="Cerrar chat">
+                <X size={20} />
               </button>
             </header>
 
@@ -219,7 +205,7 @@ export default function ChatWidget() {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className={`chat-toggle-btn ${isOpen ? 'chat-open' : ''}`}
+        className="chat-toggle-btn"
         aria-label={isOpen ? 'Cerrar chat' : 'Abrir chat'}
       >
         {isOpen ? <X size={28} /> : <MessageCircle size={28} />}
