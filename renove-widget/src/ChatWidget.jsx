@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useSocket } from './hooks/useSocket';
 import { CarCarousel } from './components/CarCarousel';
 import { BookingConfirmation } from './components/BookingConfirmation';
@@ -15,30 +15,48 @@ export default function ChatWidget() {
   const aiStreamingRef = useRef(null);
   const lastScrolledAiIndexRef = useRef(-1);
   const inputRef = useRef(null);
+  const scrollPosRef = useRef(0);
+  const isAutoScrollingRef = useRef(false);
 
   useEffect(() => {
-    const lastMessage = messages[messages.length - 1];
-    if (!lastMessage) return;
-    const lastIndex = messages.length - 1;
     const viewport = chatViewportRef.current;
     if (!viewport) return;
+    const onScroll = () => { scrollPosRef.current = viewport.scrollTop; };
+    viewport.addEventListener('scroll', onScroll, { passive: true });
+    return () => viewport.removeEventListener('scroll', onScroll);
+  }, [isOpen]);
 
-    if (lastMessage.role === 'user') {
-      lastScrolledAiIndexRef.current = -1;
-      viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
-      return;
-    }
+  useLayoutEffect(() => {
+    const viewport = chatViewportRef.current;
+    if (!viewport || messages.length === 0) return;
 
-    if (lastMessage.uiType === 'skeleton_loader') {
-      viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+    const lastMessage = messages[messages.length - 1];
+    const lastIndex = messages.length - 1;
+
+    if (lastMessage.role === 'user' || lastMessage.uiType === 'skeleton_loader') {
+      if (lastMessage.role === 'user') lastScrolledAiIndexRef.current = -1;
+      isAutoScrollingRef.current = true;
+      requestAnimationFrame(() => {
+        viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+        isAutoScrollingRef.current = false;
+      });
       return;
     }
 
     if (lastMessage.role === 'ai' && lastMessage.isStreaming && lastScrolledAiIndexRef.current !== lastIndex) {
       lastScrolledAiIndexRef.current = lastIndex;
-      if (aiStreamingRef.current) {
-        viewport.scrollTo({ top: aiStreamingRef.current.offsetTop, behavior: 'smooth' });
-      }
+      isAutoScrollingRef.current = true;
+      requestAnimationFrame(() => {
+        if (aiStreamingRef.current) {
+          viewport.scrollTo({ top: aiStreamingRef.current.offsetTop, behavior: 'smooth' });
+        }
+        isAutoScrollingRef.current = false;
+      });
+      return;
+    }
+
+    if (!isAutoScrollingRef.current) {
+      viewport.scrollTop = scrollPosRef.current;
     }
   }, [messages]);
 
