@@ -1122,6 +1122,15 @@
     overflow: hidden;
 }
 
+.skeleton-hidden {
+    visibility: hidden;
+    height: 0;
+    margin: 0;
+    border: none;
+    box-shadow: none;
+    overflow: hidden;
+}
+
 .skeleton-loader::before {
     content: '';
     position: absolute;
