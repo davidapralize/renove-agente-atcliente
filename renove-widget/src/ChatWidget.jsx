@@ -32,8 +32,8 @@ export default function ChatWidget() {
     const lastMessage = messages[messages.length - 1];
     const lastIndex = messages.length - 1;
 
-    if (lastMessage.role === 'user' || lastMessage.uiType === 'skeleton_loader') {
-      if (lastMessage.role === 'user') lastScrolledAiIndexRef.current = -1;
+    if (lastMessage.role === 'user') {
+      lastScrolledAiIndexRef.current = -1;
       requestAnimationFrame(() => {
         viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
       });
