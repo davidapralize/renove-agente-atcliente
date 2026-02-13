@@ -49,7 +49,17 @@ export default function ChatWidget() {
       return;
     }
 
-    viewport.scrollTop = scrollPosRef.current;
+    const savedPos = scrollPosRef.current;
+    viewport.scrollTop = savedPos;
+
+    const isStreamingDelta = lastMessage.role === 'ai' && lastMessage.isStreaming;
+    if (!isStreamingDelta) {
+      requestAnimationFrame(() => {
+        if (viewport.scrollTop !== savedPos) {
+          viewport.scrollTop = savedPos;
+        }
+      });
+    }
   }, [messages]);
 
   useEffect(() => {
