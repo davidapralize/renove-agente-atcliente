@@ -18,6 +18,7 @@ export const useSocket = () => {
   const isProcessingRef = useRef(false);
   const messageQueueRef = useRef([]);
   const messageBatchTimerRef = useRef(null);
+  const pendingCarDetectionRef = useRef(null);
 
   const setProcessing = (value) => {
     isProcessingRef.current = value;
@@ -74,6 +75,7 @@ export const useSocket = () => {
     socket.on('car_detected', (data) => {
       
       if (isProcessingRef.current) {
+        pendingCarDetectionRef.current = data;
         return;
       }
       
@@ -126,6 +128,24 @@ export const useSocket = () => {
 
     socket.on('message_complete', () => {
       resetUI();
+      
+      if (pendingCarDetectionRef.current) {
+        const carData = pendingCarDetectionRef.current;
+        pendingCarDetectionRef.current = null;
+        
+        setTimeout(() => {
+          if (!isProcessingRef.current && sessionIdRef.current) {
+            setProcessing(true);
+            setMessages(prev => prev.filter(msg => msg.type !== 'welcome'));
+            
+            socket.emit('message', {
+              message: 'Hola',
+              session_id: sessionIdRef.current
+            });
+          }
+        }, 500);
+        return;
+      }
       
       if (messageQueueRef.current.length > 0) {
         startBatchTimer();
