@@ -114,6 +114,7 @@ export default function ChatWidget() {
             </header>
 
             <main ref={chatViewportRef} className="chat-viewport" id="chat-display">
+              <div className="chat-messages-inner">
               {messages.length === 0 && (
                 <div className="welcome-message">
                    <h2>Bienvenido a Renove Elite</h2>
@@ -205,7 +206,7 @@ export default function ChatWidget() {
                 
                 return null;
               })}
-
+              </div>
             </main>
 
             <footer className="chat-input-container">
