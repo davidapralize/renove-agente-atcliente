@@ -41,25 +41,19 @@ export default function ChatWidget() {
     if (lastMessage.role === 'user' || lastMessage.uiType === 'skeleton_loader') {
       if (lastMessage.role === 'user') lastScrolledAiIndexRef.current = -1;
       isNearBottomRef.current = true;
-      requestAnimationFrame(() => {
-        viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
-      });
+      viewport.scrollTop = viewport.scrollHeight;
       return;
     }
 
     if (lastMessage.role === 'ai' && lastMessage.isStreaming && lastScrolledAiIndexRef.current !== lastIndex) {
       lastScrolledAiIndexRef.current = lastIndex;
       isNearBottomRef.current = true;
-      requestAnimationFrame(() => {
-        viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
-      });
+      viewport.scrollTop = viewport.scrollHeight;
       return;
     }
 
     if (isNearBottomRef.current && messages.length >= prevCount) {
-      requestAnimationFrame(() => {
-        viewport.scrollTop = viewport.scrollHeight;
-      });
+      viewport.scrollTop = viewport.scrollHeight;
     }
   }, [messages]);
 
