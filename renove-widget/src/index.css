@@ -347,6 +347,11 @@
     position: relative;
     box-shadow: none;
     overflow-anchor: none;
+    overscroll-behavior: contain;
+}
+
+.chat-viewport > * {
+    overflow-anchor: none;
 }
 
 .chat-viewport::before {
