@@ -8,7 +8,7 @@ import { marked } from 'marked';
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const { messages, sendMessage, sendSilentMessage, isProcessing, statusLabel, onInputChange, showSkeleton } = useSocket();
+  const { messages, sendMessage, sendSilentMessage, isProcessing, statusLabel, onInputChange } = useSocket();
   const [input, setInput] = useState('');
   const chatViewportRef = useRef(null);
   const chatOpenedRef = useRef(false);
@@ -32,8 +32,8 @@ export default function ChatWidget() {
     const lastMessage = messages[messages.length - 1];
     const lastIndex = messages.length - 1;
 
-    if (lastMessage.role === 'user') {
-      lastScrolledAiIndexRef.current = -1;
+    if (lastMessage.role === 'user' || lastMessage.uiType === 'skeleton_loader') {
+      if (lastMessage.role === 'user') lastScrolledAiIndexRef.current = -1;
       requestAnimationFrame(() => {
         viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
       });
@@ -49,7 +49,13 @@ export default function ChatWidget() {
       return;
     }
 
-    viewport.scrollTop = scrollPosRef.current;
+    const savedPos = scrollPosRef.current;
+    viewport.scrollTop = savedPos;
+    requestAnimationFrame(() => {
+      if (viewport.scrollTop !== savedPos) {
+        viewport.scrollTop = savedPos;
+      }
+    });
   }, [messages]);
 
   useEffect(() => {
@@ -104,7 +110,6 @@ export default function ChatWidget() {
             </header>
 
             <main ref={chatViewportRef} className="chat-viewport" id="chat-display">
-              <div className="chat-messages-inner">
               {messages.length === 0 && (
                 <div className="welcome-message">
                    <h2>Bienvenido a Renove Elite</h2>
@@ -188,10 +193,15 @@ export default function ChatWidget() {
                   );
                 }
                 
+                if (msg.uiType === 'skeleton_loader') {
+                  return (
+                    <div key={i} className="skeleton-loader" id="skeleton-loader"></div>
+                  );
+                }
+                
                 return null;
               })}
-              <div className={`skeleton-loader ${showSkeleton ? '' : 'skeleton-hidden'}`}></div>
-              </div>
+
             </main>
 
             <footer className="chat-input-container">
