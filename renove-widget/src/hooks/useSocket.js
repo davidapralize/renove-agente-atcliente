@@ -279,7 +279,10 @@ export const useSocket = () => {
   };
 
   const removeSkeletonLoader = () => {
-    setMessages(prev => prev.filter(msg => msg.uiType !== 'skeleton_loader'));
+    setMessages(prev => {
+      const filtered = prev.filter(msg => msg.uiType !== 'skeleton_loader');
+      return filtered.length === prev.length ? prev : filtered;
+    });
   };
 
   const resetUI = () => {
