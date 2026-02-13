@@ -34,8 +34,10 @@ export default function ChatWidget() {
 
     if (lastMessage.role === 'user' || lastMessage.uiType === 'skeleton_loader') {
       if (lastMessage.role === 'user') lastScrolledAiIndexRef.current = -1;
+      const scrollTarget = viewport.scrollHeight;
+      scrollPosRef.current = scrollTarget;
       requestAnimationFrame(() => {
-        viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+        viewport.scrollTo({ top: scrollTarget, behavior: 'smooth' });
       });
       return;
     }
@@ -56,7 +58,7 @@ export default function ChatWidget() {
         viewport.scrollTop = savedPos;
       }
     });
-  }, [messages]);
+  }, [messages, statusLabel]);
 
   useEffect(() => {
     if (isOpen && !chatOpenedRef.current) {
