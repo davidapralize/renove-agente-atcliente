@@ -10,7 +10,7 @@ export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const { messages, sendMessage, sendSilentMessage, isProcessing, statusLabel, onInputChange } = useSocket();
   const [input, setInput] = useState('');
-  const messagesEndRef = useRef(null);
+  const chatViewportRef = useRef(null);
   const chatOpenedRef = useRef(false);
   const aiStreamingRef = useRef(null);
   const lastScrolledAiIndexRef = useRef(-1);
@@ -20,21 +20,25 @@ export default function ChatWidget() {
     const lastMessage = messages[messages.length - 1];
     if (!lastMessage) return;
     const lastIndex = messages.length - 1;
+    const viewport = chatViewportRef.current;
+    if (!viewport) return;
 
     if (lastMessage.role === 'user') {
       lastScrolledAiIndexRef.current = -1;
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
       return;
     }
 
     if (lastMessage.uiType === 'skeleton_loader') {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
       return;
     }
 
     if (lastMessage.role === 'ai' && lastMessage.isStreaming && lastScrolledAiIndexRef.current !== lastIndex) {
       lastScrolledAiIndexRef.current = lastIndex;
-      aiStreamingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (aiStreamingRef.current) {
+        viewport.scrollTo({ top: aiStreamingRef.current.offsetTop, behavior: 'smooth' });
+      }
     }
   }, [messages]);
 
@@ -89,7 +93,7 @@ export default function ChatWidget() {
               </button>
             </header>
 
-            <main className="chat-viewport" id="chat-display">
+            <main ref={chatViewportRef} className="chat-viewport" id="chat-display">
               {messages.length === 0 && (
                 <div className="welcome-message">
                    <h2>Bienvenido a Renove Elite</h2>
@@ -182,7 +186,6 @@ export default function ChatWidget() {
                 return null;
               })}
 
-              <div ref={messagesEndRef} />
             </main>
 
             <footer className="chat-input-container">
