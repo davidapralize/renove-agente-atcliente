@@ -15,7 +15,6 @@ export default function ChatWidget() {
   const aiStreamingRef = useRef(null);
   const lastScrolledAiIndexRef = useRef(-1);
   const inputRef = useRef(null);
-  const wrapperRef = useRef(null);
 
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
@@ -38,27 +37,6 @@ export default function ChatWidget() {
       aiStreamingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [messages]);
-
-  useEffect(() => {
-    if (!isOpen || !wrapperRef.current) return;
-    const vv = window.visualViewport;
-    if (!vv) return;
-    const isMobile = () => window.innerWidth <= 500;
-
-    const handleResize = () => {
-      if (wrapperRef.current && isMobile()) {
-        wrapperRef.current.style.height = `${vv.height}px`;
-      }
-    };
-
-    vv.addEventListener('resize', handleResize);
-    return () => {
-      vv.removeEventListener('resize', handleResize);
-      if (wrapperRef.current) {
-        wrapperRef.current.style.height = '';
-      }
-    };
-  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen && !chatOpenedRef.current) {
@@ -92,7 +70,6 @@ export default function ChatWidget() {
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="renove-chat-wrapper"
-            ref={wrapperRef}
           >
             <header className="chat-header">
               <div className="brand-meta">
