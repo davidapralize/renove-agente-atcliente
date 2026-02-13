@@ -19,6 +19,7 @@ export const useSocket = () => {
   const messageQueueRef = useRef([]);
   const messageBatchTimerRef = useRef(null);
   const pendingCarDetectionRef = useRef(null);
+  const lastKnownUrlRef = useRef(null);
 
   const setProcessing = (value) => {
     isProcessingRef.current = value;
@@ -58,6 +59,7 @@ export const useSocket = () => {
       sessionIdRef.current = data.session_id;
       
       const currentPageUrl = getCurrentPageUrl();
+      lastKnownUrlRef.current = currentPageUrl;
       socket.emit('set_page_context', {
         session_id: data.session_id,
         page_url: currentPageUrl
@@ -152,7 +154,19 @@ export const useSocket = () => {
       }
     });
 
+    const urlPollInterval = setInterval(() => {
+      const currentUrl = getCurrentPageUrl();
+      if (currentUrl !== lastKnownUrlRef.current && sessionIdRef.current) {
+        lastKnownUrlRef.current = currentUrl;
+        socket.emit('set_page_context', {
+          session_id: sessionIdRef.current,
+          page_url: currentUrl
+        });
+      }
+    }, 1500);
+
     return () => {
+      clearInterval(urlPollInterval);
       clearTimeout(messageBatchTimerRef.current);
       socket.disconnect();
     };
