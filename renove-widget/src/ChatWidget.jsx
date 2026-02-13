@@ -101,11 +101,7 @@ export default function ChatWidget() {
                       ref={msg.isStreaming ? aiStreamingRef : null}
                       className={`message-bubble ${msg.role === 'user' ? 'user-msg' : 'ai-msg'} ${msg.isStreaming ? 'is-streaming' : ''}`}
                     >
-                      {msg.isStreaming ? (
-                        <span className="text-content">{msg.content}</span>
-                      ) : (
-                        <span className="text-content" dangerouslySetInnerHTML={{ __html: marked.parse(msg.content) }} />
-                      )}
+                      <span className="text-content" dangerouslySetInnerHTML={{ __html: marked.parse(msg.content) }} />
                     </div>
                   );
                 }
