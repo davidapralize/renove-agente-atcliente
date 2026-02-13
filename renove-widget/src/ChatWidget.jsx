@@ -8,7 +8,7 @@ import { marked } from 'marked';
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const { messages, sendMessage, sendSilentMessage, isProcessing, statusLabel, onInputChange } = useSocket();
+  const { messages, sendMessage, sendSilentMessage, isProcessing, statusLabel, onInputChange, showSkeleton } = useSocket();
   const [input, setInput] = useState('');
   const chatViewportRef = useRef(null);
   const chatOpenedRef = useRef(false);
@@ -16,16 +16,11 @@ export default function ChatWidget() {
   const lastScrolledAiIndexRef = useRef(-1);
   const inputRef = useRef(null);
   const scrollPosRef = useRef(0);
-  const isRestoringScrollRef = useRef(false);
 
   useEffect(() => {
     const viewport = chatViewportRef.current;
     if (!viewport) return;
-    const onScroll = () => {
-      if (!isRestoringScrollRef.current) {
-        scrollPosRef.current = viewport.scrollTop;
-      }
-    };
+    const onScroll = () => { scrollPosRef.current = viewport.scrollTop; };
     viewport.addEventListener('scroll', onScroll, { passive: true });
     return () => viewport.removeEventListener('scroll', onScroll);
   }, [isOpen]);
@@ -54,20 +49,7 @@ export default function ChatWidget() {
       return;
     }
 
-    const savedPos = scrollPosRef.current;
-    viewport.scrollTop = savedPos;
-
-    const isStreamingDelta = lastMessage.role === 'ai' && lastMessage.isStreaming;
-    if (!isStreamingDelta) {
-      isRestoringScrollRef.current = true;
-      requestAnimationFrame(() => {
-        viewport.scrollTop = savedPos;
-        setTimeout(() => {
-          viewport.scrollTop = savedPos;
-          isRestoringScrollRef.current = false;
-        }, 30);
-      });
-    }
+    viewport.scrollTop = scrollPosRef.current;
   }, [messages]);
 
   useEffect(() => {
@@ -206,14 +188,9 @@ export default function ChatWidget() {
                   );
                 }
                 
-                if (msg.uiType === 'skeleton_loader') {
-                  return (
-                    <div key={i} className="skeleton-loader" id="skeleton-loader"></div>
-                  );
-                }
-                
                 return null;
               })}
+              <div className={`skeleton-loader ${showSkeleton ? '' : 'skeleton-hidden'}`}></div>
               </div>
             </main>
 
