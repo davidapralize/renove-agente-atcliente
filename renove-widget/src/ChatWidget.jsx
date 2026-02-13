@@ -12,31 +12,38 @@ export default function ChatWidget() {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef(null);
   const chatOpenedRef = useRef(false);
-  const prevMessagesLengthRef = useRef(0);
-  const prevIsProcessingRef = useRef(false);
+  const shouldScrollRef = useRef(true);
+  const aiStreamingRef = useRef(null);
 
   useEffect(() => {
-    const messagesLengthChanged = messages.length > prevMessagesLengthRef.current;
-    const loadingStarted = isProcessing && !prevIsProcessingRef.current;
     const lastMessage = messages[messages.length - 1];
-    const isLastMessageUser = lastMessage?.role === 'user';
-    
-    if (messagesLengthChanged && isLastMessageUser && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    } else if (loadingStarted && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (!lastMessage) return;
+
+    if (lastMessage.role === 'user') {
+      shouldScrollRef.current = true;
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      return;
     }
-    
-    prevMessagesLengthRef.current = messages.length;
-    prevIsProcessingRef.current = isProcessing;
-  }, [messages, isProcessing]);
+
+    if (!shouldScrollRef.current) return;
+
+    if (lastMessage.uiType === 'skeleton_loader') {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
+    if (lastMessage.role === 'ai' && lastMessage.isStreaming) {
+      aiStreamingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      shouldScrollRef.current = false;
+    }
+  }, [messages]);
 
   useEffect(() => {
     if (isOpen && !chatOpenedRef.current) {
       chatOpenedRef.current = true;
       if (messages.length === 0 && !isProcessing) {
         setTimeout(() => {
-          sendSilentMessage('Hola! Quién eres y qué puedes hacer?');
+          sendSilentMessage('Hola! Preséntate y cuéntame qué puedes hacer?');
         }, 300);
       }
     } else if (!isOpen) {
@@ -91,6 +98,7 @@ export default function ChatWidget() {
                   return (
                     <div 
                       key={i}
+                      ref={msg.isStreaming ? aiStreamingRef : null}
                       className={`message-bubble ${msg.role === 'user' ? 'user-msg' : 'ai-msg'} ${msg.isStreaming ? 'is-streaming' : ''}`}
                     >
                       {msg.isStreaming ? (
@@ -105,7 +113,11 @@ export default function ChatWidget() {
                 if (msg.uiType === 'car_cards') {
                   return (
                     <div key={i} className="ui-element-container">
-                      <CarCarousel cars={msg.data.cars} onCarDetails={(name) => sendMessage(`Cuéntame más sobre el ${name}`)} />
+                      <CarCarousel 
+                        cars={msg.data.cars} 
+                        priorityStats={msg.data.priority_stats}
+                        onCarDetails={(name) => sendMessage(`Cuéntame más sobre el ${name}`)} 
+                      />
                     </div>
                   );
                 }
