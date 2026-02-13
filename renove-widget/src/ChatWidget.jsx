@@ -16,11 +16,16 @@ export default function ChatWidget() {
   const lastScrolledAiIndexRef = useRef(-1);
   const inputRef = useRef(null);
   const scrollPosRef = useRef(0);
+  const isRestoringScrollRef = useRef(false);
 
   useEffect(() => {
     const viewport = chatViewportRef.current;
     if (!viewport) return;
-    const onScroll = () => { scrollPosRef.current = viewport.scrollTop; };
+    const onScroll = () => {
+      if (!isRestoringScrollRef.current) {
+        scrollPosRef.current = viewport.scrollTop;
+      }
+    };
     viewport.addEventListener('scroll', onScroll, { passive: true });
     return () => viewport.removeEventListener('scroll', onScroll);
   }, [isOpen]);
@@ -54,10 +59,13 @@ export default function ChatWidget() {
 
     const isStreamingDelta = lastMessage.role === 'ai' && lastMessage.isStreaming;
     if (!isStreamingDelta) {
+      isRestoringScrollRef.current = true;
       requestAnimationFrame(() => {
-        if (viewport.scrollTop !== savedPos) {
+        viewport.scrollTop = savedPos;
+        setTimeout(() => {
           viewport.scrollTop = savedPos;
-        }
+          isRestoringScrollRef.current = false;
+        }, 30);
       });
     }
   }, [messages]);
