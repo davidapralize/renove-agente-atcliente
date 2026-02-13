@@ -12,18 +12,16 @@ export default function ChatWidget() {
   const [input, setInput] = useState('');
   const chatViewportRef = useRef(null);
   const chatOpenedRef = useRef(false);
+  const aiStreamingRef = useRef(null);
   const lastScrolledAiIndexRef = useRef(-1);
   const inputRef = useRef(null);
-  const isNearBottomRef = useRef(true);
-  const prevMsgCountRef = useRef(0);
+  const scrollPosRef = useRef(0);
+  const isAutoScrollingRef = useRef(false);
 
   useEffect(() => {
     const viewport = chatViewportRef.current;
     if (!viewport) return;
-    const onScroll = () => {
-      isNearBottomRef.current =
-        viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 150;
-    };
+    const onScroll = () => { scrollPosRef.current = viewport.scrollTop; };
     viewport.addEventListener('scroll', onScroll, { passive: true });
     return () => viewport.removeEventListener('scroll', onScroll);
   }, [isOpen]);
@@ -32,28 +30,33 @@ export default function ChatWidget() {
     const viewport = chatViewportRef.current;
     if (!viewport || messages.length === 0) return;
 
-    const prevCount = prevMsgCountRef.current;
-    prevMsgCountRef.current = messages.length;
-
     const lastMessage = messages[messages.length - 1];
     const lastIndex = messages.length - 1;
 
     if (lastMessage.role === 'user' || lastMessage.uiType === 'skeleton_loader') {
       if (lastMessage.role === 'user') lastScrolledAiIndexRef.current = -1;
-      isNearBottomRef.current = true;
-      viewport.scrollTop = viewport.scrollHeight;
+      isAutoScrollingRef.current = true;
+      requestAnimationFrame(() => {
+        viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+        isAutoScrollingRef.current = false;
+      });
       return;
     }
 
     if (lastMessage.role === 'ai' && lastMessage.isStreaming && lastScrolledAiIndexRef.current !== lastIndex) {
       lastScrolledAiIndexRef.current = lastIndex;
-      isNearBottomRef.current = true;
-      viewport.scrollTop = viewport.scrollHeight;
+      isAutoScrollingRef.current = true;
+      requestAnimationFrame(() => {
+        if (aiStreamingRef.current) {
+          viewport.scrollTo({ top: aiStreamingRef.current.offsetTop, behavior: 'smooth' });
+        }
+        isAutoScrollingRef.current = false;
+      });
       return;
     }
 
-    if (isNearBottomRef.current && messages.length >= prevCount) {
-      viewport.scrollTop = viewport.scrollHeight;
+    if (!isAutoScrollingRef.current) {
+      viewport.scrollTop = scrollPosRef.current;
     }
   }, [messages]);
 
@@ -120,7 +123,8 @@ export default function ChatWidget() {
                 if (msg.type === 'text') {
                   return (
                     <div 
-                      key={msg.id}
+                      key={i}
+                      ref={msg.isStreaming ? aiStreamingRef : null}
                       className={`message-bubble ${msg.role === 'user' ? 'user-msg' : 'ai-msg'} ${msg.isStreaming ? 'is-streaming' : ''}`}
                     >
                       <span className="text-content" dangerouslySetInnerHTML={{ __html: marked.parse(msg.content) }} />
@@ -130,7 +134,7 @@ export default function ChatWidget() {
                 
                 if (msg.uiType === 'car_cards') {
                   return (
-                    <div key={msg.id} className="ui-element-container">
+                    <div key={i} className="ui-element-container">
                       <CarCarousel 
                         cars={msg.data.cars} 
                         priorityStats={msg.data.priority_stats}
@@ -142,7 +146,7 @@ export default function ChatWidget() {
                 
                 if (msg.uiType === 'booking_confirmation') {
                   return (
-                    <div key={msg.id} className="ui-element-container">
+                    <div key={i} className="ui-element-container">
                       <BookingConfirmation data={msg.data} />
                     </div>
                   );
@@ -164,7 +168,7 @@ export default function ChatWidget() {
                   }
                   
                   return (
-                    <div key={msg.id} className="ui-element-container">
+                    <div key={i} className="ui-element-container">
                       <div className="financing-table">
                         <table>
                           <thead>
@@ -193,7 +197,7 @@ export default function ChatWidget() {
                 
                 if (msg.uiType === 'skeleton_loader') {
                   return (
-                    <div key={msg.id} className="skeleton-loader" id="skeleton-loader"></div>
+                    <div key={i} className="skeleton-loader" id="skeleton-loader"></div>
                   );
                 }
                 
