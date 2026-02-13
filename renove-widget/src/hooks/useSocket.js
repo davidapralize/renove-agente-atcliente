@@ -274,13 +274,16 @@ export const useSocket = () => {
   };
 
   const showSkeletonLoader = () => {
-    setMessages(prev => [...prev, {
-      id: nextMsgId(),
-      role: 'ai',
-      type: 'ui',
-      uiType: 'skeleton_loader',
-      data: {}
-    }]);
+    setMessages(prev => {
+      if (prev.some(msg => msg.uiType === 'skeleton_loader')) return prev;
+      return [...prev, {
+        id: nextMsgId(),
+        role: 'ai',
+        type: 'ui',
+        uiType: 'skeleton_loader',
+        data: {}
+      }];
+    });
   };
 
   const removeSkeletonLoader = () => {
