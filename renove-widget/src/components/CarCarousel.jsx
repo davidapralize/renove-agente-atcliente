@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ChevronRight, ChevronLeft, Calendar, Fuel, Gauge, DollarSign, Zap, Users, Car, Square, Palette, Leaf, Shield } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Calendar, Fuel, Gauge, EuroIcon, Zap, Users, Car, Square, Palette, Leaf, Shield } from 'lucide-react';
 import { useRef, useState, useEffect, useCallback } from 'react';
 
 const FUEL_LABELS = {
@@ -38,7 +38,7 @@ const formatBodyStyle = (raw) => {
 
 const STAT_CONFIG = {
   price: {
-    icon: DollarSign,
+    icon: EuroIcon,
     format: (car) => {
       if (!car.price) return 'N/D';
       return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(car.price);
@@ -165,14 +165,18 @@ export const CarCarousel = ({ cars, priorityStats, onCarDetails }) => {
 
   if (!cars?.length) return null;
 
+  const isSingleCard = cars.length === 1;
+
   return (
     <div className="car-carousel">
 
-      <button onClick={() => scroll(-1)} className="carousel-nav carousel-prev">
-        <ChevronLeft size={20} />
-      </button>
+      {!isSingleCard && (
+        <button onClick={() => scroll(-1)} className="carousel-nav carousel-prev">
+          <ChevronLeft size={20} />
+        </button>
+      )}
 
-      <div ref={scrollRef} className="car-scroll-track">
+      <div ref={scrollRef} className={`car-scroll-track ${isSingleCard ? 'single-card' : ''}`}>
         {cars.map((car) => (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -211,19 +215,23 @@ export const CarCarousel = ({ cars, priorityStats, onCarDetails }) => {
         ))}
       </div>
 
-      <button onClick={() => scroll(1)} className="carousel-nav carousel-next">
-        <ChevronRight size={20} />
-      </button>
+      {!isSingleCard && (
+        <button onClick={() => scroll(1)} className="carousel-nav carousel-next">
+          <ChevronRight size={20} />
+        </button>
+      )}
 
-      <div className="carousel-indicators">
-        {cars.map((_, i) => (
-          <button
-            key={i}
-            className={`carousel-indicator ${i === activeIndex ? 'active' : ''}`}
-            onClick={() => scrollToIndex(i)}
-          />
-        ))}
-      </div>
+      {!isSingleCard && (
+        <div className="carousel-indicators">
+          {cars.map((_, i) => (
+            <button
+              key={i}
+              className={`carousel-indicator ${i === activeIndex ? 'active' : ''}`}
+              onClick={() => scrollToIndex(i)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
