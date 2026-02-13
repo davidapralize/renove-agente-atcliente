@@ -270,12 +270,10 @@ export const useSocket = () => {
   };
 
   const showSkeletonLoader = () => {
-    setMessages(prev => [...prev, {
-      role: 'ai',
-      type: 'ui',
-      uiType: 'skeleton_loader',
-      data: {}
-    }]);
+    setMessages(prev => {
+      if (prev.some(msg => msg.uiType === 'skeleton_loader')) return prev;
+      return [...prev, { role: 'ai', type: 'ui', uiType: 'skeleton_loader', data: {} }];
+    });
   };
 
   const removeSkeletonLoader = () => {
