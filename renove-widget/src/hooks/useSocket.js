@@ -20,6 +20,8 @@ export const useSocket = () => {
   const messageBatchTimerRef = useRef(null);
   const pendingCarDetectionRef = useRef(null);
   const lastKnownUrlRef = useRef(null);
+  const msgIdRef = useRef(0);
+  const nextMsgId = () => ++msgIdRef.current;
 
   const setProcessing = (value) => {
     isProcessingRef.current = value;
@@ -120,6 +122,7 @@ export const useSocket = () => {
     socket.on('error', (data) => {
       console.error('[Socket Error]', data);
       setMessages(prev => [...prev, {
+        id: nextMsgId(),
         role: 'ai',
         type: 'text',
         content: `Error: ${data.message}`,
@@ -202,7 +205,7 @@ export const useSocket = () => {
     
     setMessages(prev => {
       const filtered = prev.filter(msg => msg.type !== 'welcome');
-      return [...filtered, { role: 'ai', type: 'text', content: '', isStreaming: true }];
+      return [...filtered, { id: nextMsgId(), role: 'ai', type: 'text', content: '', isStreaming: true }];
     });
   };
 
@@ -251,6 +254,7 @@ export const useSocket = () => {
     removeSkeletonLoader();
     
     setMessages(prev => [...prev, {
+      id: nextMsgId(),
       role: 'ai',
       type: 'ui',
       uiType: data.type,
@@ -271,6 +275,7 @@ export const useSocket = () => {
 
   const showSkeletonLoader = () => {
     setMessages(prev => [...prev, {
+      id: nextMsgId(),
       role: 'ai',
       type: 'ui',
       uiType: 'skeleton_loader',
@@ -334,7 +339,7 @@ export const useSocket = () => {
     }
     
     setMessages(prev => prev.filter(msg => msg.type !== 'welcome'));
-    setMessages(prev => [...prev, { role: 'user', type: 'text', content: text }]);
+    setMessages(prev => [...prev, { id: nextMsgId(), role: 'user', type: 'text', content: text }]);
     
     messageQueueRef.current.push(text);
     startBatchTimer();
