@@ -79,7 +79,8 @@ export default function ChatWidget() {
     if (!input.trim()) return;
     sendMessage(input);
     setInput('');
-    inputRef.current?.blur();
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (isTouchDevice) inputRef.current?.blur();
   };
 
   return (
