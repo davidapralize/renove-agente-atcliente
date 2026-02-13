@@ -15,6 +15,7 @@ export default function ChatWidget() {
   const lastScrolledAiIndexRef = useRef(-1);
   const inputRef = useRef(null);
   const isNearBottomRef = useRef(true);
+  const prevMsgCountRef = useRef(0);
 
   useEffect(() => {
     const viewport = chatViewportRef.current;
@@ -30,6 +31,9 @@ export default function ChatWidget() {
   useLayoutEffect(() => {
     const viewport = chatViewportRef.current;
     if (!viewport || messages.length === 0) return;
+
+    const prevCount = prevMsgCountRef.current;
+    prevMsgCountRef.current = messages.length;
 
     const lastMessage = messages[messages.length - 1];
     const lastIndex = messages.length - 1;
@@ -52,8 +56,10 @@ export default function ChatWidget() {
       return;
     }
 
-    if (isNearBottomRef.current) {
-      viewport.scrollTop = viewport.scrollHeight;
+    if (isNearBottomRef.current && messages.length >= prevCount) {
+      requestAnimationFrame(() => {
+        viewport.scrollTop = viewport.scrollHeight;
+      });
     }
   }, [messages]);
 
@@ -120,7 +126,7 @@ export default function ChatWidget() {
                 if (msg.type === 'text') {
                   return (
                     <div 
-                      key={i}
+                      key={msg.id}
                       className={`message-bubble ${msg.role === 'user' ? 'user-msg' : 'ai-msg'} ${msg.isStreaming ? 'is-streaming' : ''}`}
                     >
                       <span className="text-content" dangerouslySetInnerHTML={{ __html: marked.parse(msg.content) }} />
@@ -130,7 +136,7 @@ export default function ChatWidget() {
                 
                 if (msg.uiType === 'car_cards') {
                   return (
-                    <div key={i} className="ui-element-container">
+                    <div key={msg.id} className="ui-element-container">
                       <CarCarousel 
                         cars={msg.data.cars} 
                         priorityStats={msg.data.priority_stats}
@@ -142,7 +148,7 @@ export default function ChatWidget() {
                 
                 if (msg.uiType === 'booking_confirmation') {
                   return (
-                    <div key={i} className="ui-element-container">
+                    <div key={msg.id} className="ui-element-container">
                       <BookingConfirmation data={msg.data} />
                     </div>
                   );
@@ -164,7 +170,7 @@ export default function ChatWidget() {
                   }
                   
                   return (
-                    <div key={i} className="ui-element-container">
+                    <div key={msg.id} className="ui-element-container">
                       <div className="financing-table">
                         <table>
                           <thead>
@@ -193,7 +199,7 @@ export default function ChatWidget() {
                 
                 if (msg.uiType === 'skeleton_loader') {
                   return (
-                    <div key={i} className="skeleton-loader" id="skeleton-loader"></div>
+                    <div key={msg.id} className="skeleton-loader" id="skeleton-loader"></div>
                   );
                 }
                 
