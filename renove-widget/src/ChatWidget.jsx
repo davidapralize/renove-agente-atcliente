@@ -8,12 +8,42 @@ import { marked } from 'marked';
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const { messages, sendMessage, isProcessing, statusLabel, onInputChange } = useSocket();
+  const { messages, sendMessage, sendSilentMessage, isProcessing, statusLabel, onInputChange } = useSocket();
   const [input, setInput] = useState('');
   const messagesEndRef = useRef(null);
+  const chatOpenedRef = useRef(false);
+  const prevMessagesLengthRef = useRef(0);
+  const prevIsProcessingRef = useRef(false);
 
-  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  useEffect(scrollToBottom, [messages, isOpen]);
+  useEffect(() => {
+    const messagesLengthChanged = messages.length > prevMessagesLengthRef.current;
+    const loadingStarted = isProcessing && !prevIsProcessingRef.current;
+    const lastMessage = messages[messages.length - 1];
+    const isLastMessageUser = lastMessage?.role === 'user';
+    
+    if (messagesLengthChanged && isLastMessageUser && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    } else if (loadingStarted && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    prevMessagesLengthRef.current = messages.length;
+    prevIsProcessingRef.current = isProcessing;
+  }, [messages, isProcessing]);
+
+  useEffect(() => {
+    if (isOpen && !chatOpenedRef.current) {
+      chatOpenedRef.current = true;
+      if (messages.length === 0 && !isProcessing) {
+        setTimeout(() => {
+          sendSilentMessage('Hola! Quién eres y qué puedes hacer?');
+        }, 300);
+      }
+    } else if (!isOpen) {
+      chatOpenedRef.current = false;
+    }
+  }, [isOpen, messages.length, isProcessing, sendSilentMessage]);
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
