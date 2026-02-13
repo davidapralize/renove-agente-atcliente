@@ -492,14 +492,14 @@
 .message-bubble ol ul {
     list-style-type: circle;
     margin: 8px 0 8px 0;
-    padding-left: 24px;
+    padding-left: 40px;
 }
 
 .message-bubble ul ol,
 .message-bubble ol ol {
     list-style-type: lower-alpha;
     margin: 8px 0 8px 0;
-    padding-left: 24px;
+    padding-left: 40px;
 }
 
 .message-bubble li > ul,
@@ -513,7 +513,7 @@
 .message-bubble ul ol ul,
 .message-bubble ol ol ul {
     list-style-type: square;
-    padding-left: 28px;
+    padding-left: 56px;
     margin: 6px 0;
 }
 
@@ -522,7 +522,7 @@
 .message-bubble ul ul ol,
 .message-bubble ol ul ol {
     list-style-type: lower-roman;
-    padding-left: 28px;
+    padding-left: 56px;
     margin: 6px 0;
 }
 
@@ -531,7 +531,7 @@
 .message-bubble ul ol ul ul,
 .message-bubble ol ol ul ul {
     list-style-type: disc;
-    padding-left: 32px;
+    padding-left: 72px;
     opacity: 0.9;
 }
 
@@ -540,7 +540,7 @@
 .message-bubble ul ul ol ol,
 .message-bubble ol ul ol ol {
     list-style-type: decimal;
-    padding-left: 32px;
+    padding-left: 72px;
     opacity: 0.9;
 }
 
@@ -596,15 +596,13 @@
 
 .message-bubble ol > li > ul,
 .message-bubble ol > li > ol {
-    border-left: 2px solid rgba(168, 0, 0, 0.15);
-    padding-left: 28px;
+    padding-left: 40px;
     margin-left: 4px;
 }
 
 .message-bubble ul > li > ul,
 .message-bubble ul > li > ol {
-    border-left: 2px solid rgba(168, 0, 0, 0.15);
-    padding-left: 28px;
+    padding-left: 40px;
     margin-left: 4px;
 }
 
@@ -612,8 +610,7 @@
 .message-bubble li > ul > li > ol,
 .message-bubble li > ol > li > ul,
 .message-bubble li > ol > li > ol {
-    border-left: 2px solid rgba(168, 0, 0, 0.12);
-    padding-left: 32px;
+    padding-left: 56px;
 }
 
 .message-bubble li > ul > li > ul > li > ul,
@@ -624,25 +621,12 @@
 .message-bubble li > ul > li > ol > li > ol,
 .message-bubble li > ol > li > ol > li > ul,
 .message-bubble li > ol > li > ol > li > ol {
-    border-left: 2px solid rgba(168, 0, 0, 0.08);
-    padding-left: 36px;
+    padding-left: 72px;
 }
 
 .message-bubble li > ul > li,
 .message-bubble li > ol > li {
     position: relative;
-}
-
-.message-bubble li > ul > li::before,
-.message-bubble li > ol > li::before {
-    content: '';
-    position: absolute;
-    left: -6px;
-    top: 0.65em;
-    width: 5px;
-    height: 2px;
-    background: rgba(168, 0, 0, 0.25);
-    border-radius: 2px;
 }
 
 .message-bubble > ol > li > p:first-child,
@@ -1534,6 +1518,11 @@ button:focus-visible {
 
 .car-scroll-track::-webkit-scrollbar {
     display: none;
+}
+
+.car-scroll-track.single-card {
+    justify-content: center;
+    overflow-x: hidden;
 }
 
 .car-card-v2 {
