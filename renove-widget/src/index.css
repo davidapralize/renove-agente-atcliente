@@ -1170,7 +1170,7 @@
     padding: 12px 18px;
     border: 1px solid var(--glass-border);
     border-radius: 16px;
-    font-size: 15px;
+    font-size: 16px;
     outline: none;
     transition: none;
     font-family: inherit;
@@ -1840,7 +1840,7 @@ button:focus-visible {
 
     #user-query {
         padding: 10px 14px;
-        font-size: 14px;
+        font-size: 16px;
     }
 
     #btn-send {
