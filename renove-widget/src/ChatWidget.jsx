@@ -49,13 +49,7 @@ export default function ChatWidget() {
       return;
     }
 
-    const savedPos = scrollPosRef.current;
-    viewport.scrollTop = savedPos;
-    requestAnimationFrame(() => {
-      if (viewport.scrollTop !== savedPos) {
-        viewport.scrollTop = savedPos;
-      }
-    });
+    viewport.scrollTop = scrollPosRef.current;
   }, [messages]);
 
   useEffect(() => {
