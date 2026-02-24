@@ -73,6 +73,97 @@
     box-shadow: 0 10px 36px rgba(168, 0, 0, 0.7);
 }
 
+/* --- Proactive bubble --- */
+.proactive-bubble {
+    position: absolute;
+    bottom: 72px;
+    right: 0;
+    max-width: 280px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+    border: 1px solid rgba(168, 0, 0, 0.35);
+    border-radius: 16px 16px 4px 16px;
+    padding: 14px 36px 14px 16px;
+    cursor: pointer;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    z-index: 1;
+}
+
+.proactive-bubble::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(168, 0, 0, 0.5), transparent);
+    border-radius: 16px 16px 0 0;
+}
+
+.proactive-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    right: 18px;
+    width: 12px;
+    height: 12px;
+    background: linear-gradient(135deg, transparent 50%, #1a1a1a 50%);
+    border-right: 1px solid rgba(168, 0, 0, 0.35);
+    border-bottom: 1px solid rgba(168, 0, 0, 0.35);
+    transform: rotate(45deg);
+}
+
+.proactive-bubble:hover {
+    border-color: rgba(168, 0, 0, 0.6);
+    box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.6),
+        0 0 20px rgba(168, 0, 0, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.proactive-bubble-text {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.92);
+    display: block;
+}
+
+.proactive-bubble-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+    padding: 0;
+}
+
+.proactive-bubble-close:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 500px) {
+    .proactive-bubble {
+        right: 0;
+        bottom: 68px;
+        max-width: 250px;
+    }
+}
+
 .renove-chat-wrapper {
     max-width: 520px;
     width: 520px;
