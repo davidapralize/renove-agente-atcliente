@@ -8,6 +8,73 @@ import { MessageCircle, X, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { marked } from 'marked';
 
+/**
+ * Hook that animates text transitions with a delete-then-type effect.
+ * Returns the currently visible text and whether the animation is active.
+ */
+function useTypewriterTransition(targetText, { deleteSpeed = 28, typeSpeed = 38, pauseBetween = 220 } = {}) {
+  const [displayText, setDisplayText] = useState('');
+  const [isAnimating, setIsAnimating] = useState(false);
+  const prevTargetRef = useRef(null);
+
+  useEffect(() => {
+    if (!targetText) {
+      setDisplayText('');
+      prevTargetRef.current = null;
+      return;
+    }
+
+    // First message — just type it in
+    if (prevTargetRef.current === null) {
+      prevTargetRef.current = targetText;
+      setIsAnimating(true);
+      let i = 0;
+      const timer = setInterval(() => {
+        i++;
+        setDisplayText(targetText.slice(0, i));
+        if (i >= targetText.length) {
+          clearInterval(timer);
+          setIsAnimating(false);
+        }
+      }, typeSpeed);
+      return () => clearInterval(timer);
+    }
+
+    // Same message — no animation
+    if (prevTargetRef.current === targetText) return;
+
+    const oldText = prevTargetRef.current;
+    prevTargetRef.current = targetText;
+    setIsAnimating(true);
+
+    // Phase 1: delete old text
+    let charIndex = oldText.length;
+    const deleteTimer = setInterval(() => {
+      charIndex--;
+      setDisplayText(oldText.slice(0, charIndex));
+      if (charIndex <= 0) {
+        clearInterval(deleteTimer);
+        // Phase 2: pause, then type new text
+        setTimeout(() => {
+          let j = 0;
+          const typeTimer = setInterval(() => {
+            j++;
+            setDisplayText(targetText.slice(0, j));
+            if (j >= targetText.length) {
+              clearInterval(typeTimer);
+              setIsAnimating(false);
+            }
+          }, typeSpeed);
+        }, pauseBetween);
+      }
+    }, deleteSpeed);
+
+    return () => clearInterval(deleteTimer);
+  }, [targetText, deleteSpeed, typeSpeed, pauseBetween]);
+
+  return { displayText, isAnimating };
+}
+
 const BUBBLE_INITIAL_DELAY = 10000; // 10s para la primera burbuja
 const BUBBLE_FOLLOWUP_DELAY = 45000; // 45s para la segunda burbuja
 const BUBBLE_SESSION_KEY = 'renove_bubble_dismissed';
@@ -16,8 +83,9 @@ export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const { messages, sendMessage, showLocalGreeting, isProcessing, statusLabel, onInputChange, detectedCar } = useSocket();
   const [input, setInput] = useState('');
-  const [bubbleMessage, setBubbleMessage] = useState(null);
+  const [bubbleTarget, setBubbleTarget] = useState(null);
   const [bubbleVisible, setBubbleVisible] = useState(false);
+  const { displayText: bubbleDisplayText, isAnimating: bubbleAnimating } = useTypewriterTransition(bubbleTarget);
   const chatViewportRef = useRef(null);
   const chatOpenedRef = useRef(false);
   const aiStreamingRef = useRef(null);
@@ -84,7 +152,7 @@ export default function ChatWidget() {
 
   const dismissBubble = useCallback(() => {
     setBubbleVisible(false);
-    setBubbleMessage(null);
+    setBubbleTarget(null);
     clearTimeout(bubbleTimerRef.current);
     clearTimeout(followupTimerRef.current);
     bubblePhaseRef.current = 'done';
@@ -92,7 +160,7 @@ export default function ChatWidget() {
   }, []);
 
   const showBubble = useCallback((msg) => {
-    setBubbleMessage(msg);
+    setBubbleTarget(msg);
     setBubbleVisible(true);
   }, []);
 
@@ -319,7 +387,7 @@ export default function ChatWidget() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {bubbleVisible && !isOpen && bubbleMessage && (
+        {bubbleVisible && !isOpen && bubbleTarget && (
           <motion.div
             initial={{ opacity: 0, y: 10, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -332,7 +400,7 @@ export default function ChatWidget() {
               <span className="proactive-bubble-dot"></span>
               <span className="proactive-bubble-name">Renove AI</span>
             </div>
-            <span className="proactive-bubble-text">{bubbleMessage}</span>
+            <span className="proactive-bubble-text">{bubbleDisplayText}<span className={`bubble-cursor${bubbleAnimating ? ' typing' : ''}`}>|</span></span>
             <button
               className="proactive-bubble-close"
               onClick={(e) => { e.stopPropagation(); dismissBubble(); }}
