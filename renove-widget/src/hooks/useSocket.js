@@ -1,5 +1,6 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
+import { getRandomGreeting } from '../greetings';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 const MESSAGE_BATCH_DELAY = 2000;
@@ -9,7 +10,7 @@ export const useSocket = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [statusLabel, setStatusLabel] = useState('A su servicio');
   const [isProcessing, setIsProcessing] = useState(false);
-  
+
   const socketRef = useRef(null);
   const sessionIdRef = useRef(null);
   const activeAiMessageRef = useRef(null);
@@ -20,6 +21,7 @@ export const useSocket = () => {
   const messageBatchTimerRef = useRef(null);
   const pendingCarDetectionRef = useRef(null);
   const lastKnownUrlRef = useRef(null);
+  const greetingTextRef = useRef(null);
 
   const setProcessing = (value) => {
     isProcessingRef.current = value;
@@ -75,19 +77,14 @@ export const useSocket = () => {
     });
 
     socket.on('car_detected', (data) => {
-      
+
       if (isProcessingRef.current) {
         pendingCarDetectionRef.current = data;
         return;
       }
-      
-      setProcessing(true);
-      setMessages(prev => prev.filter(msg => msg.type !== 'welcome'));
-      
-      socket.emit('message', {
-        message: 'Hola',
-        session_id: sessionIdRef.current
-      });
+
+      const greeting = getRandomGreeting('car', data.car_data);
+      showLocalGreeting(greeting);
     });
 
     socket.on('chat_token', (data) => {
@@ -132,18 +129,13 @@ export const useSocket = () => {
       resetUI();
       
       if (pendingCarDetectionRef.current) {
-        const carData = pendingCarDetectionRef.current;
+        const pendingData = pendingCarDetectionRef.current;
         pendingCarDetectionRef.current = null;
-        
+
         setTimeout(() => {
-          if (!isProcessingRef.current && sessionIdRef.current) {
-            setProcessing(true);
-            setMessages(prev => prev.filter(msg => msg.type !== 'welcome'));
-            
-            socket.emit('message', {
-              message: 'Hola',
-              session_id: sessionIdRef.current
-            });
+          if (!isProcessingRef.current) {
+            const greeting = getRandomGreeting('car', pendingData.car_data);
+            showLocalGreeting(greeting);
           }
         }, 500);
         return;
@@ -289,24 +281,31 @@ export const useSocket = () => {
   };
 
   const sendQueuedMessages = () => {
-    
+
     if (messageQueueRef.current.length === 0) {
       return;
     }
-    
+
     if (isProcessingRef.current) {
       return;
     }
-    
+
     setProcessing(true);
-    
+
     const combinedMessage = messageQueueRef.current.join('\n');
     messageQueueRef.current = [];
-    
-    socketRef.current.emit('message', {
+
+    const payload = {
       message: combinedMessage,
       session_id: sessionIdRef.current
-    });
+    };
+
+    if (greetingTextRef.current) {
+      payload.greeting_context = greetingTextRef.current;
+      greetingTextRef.current = null;
+    }
+
+    socketRef.current.emit('message', payload);
   };
 
   const startBatchTimer = () => {
@@ -343,23 +342,59 @@ export const useSocket = () => {
     }
   };
 
-  const sendSilentMessage = (text) => {
-    if (!socketRef.current || !sessionIdRef.current) {
-      return;
-    }
-    
-    if (isProcessingRef.current) {
-      return;
-    }
-    
-    setProcessing(true);
-    setMessages(prev => prev.filter(msg => msg.type !== 'welcome'));
-    
-    socketRef.current.emit('message', {
-      message: text,
-      session_id: sessionIdRef.current
-    });
-  };
+  const showLocalGreeting = useCallback((text) => {
+    if (isProcessingRef.current) return;
 
-  return { messages, sendMessage, sendSilentMessage, isConnected, isProcessing, statusLabel, onInputChange };
+    setProcessing(true);
+    setStatusLabel('Escribiendo...');
+    setMessages(prev => prev.filter(msg => msg.type !== 'welcome'));
+
+    greetingTextRef.current = text;
+
+    // Simulate typing effect by injecting the message in chunks
+    setMessages(prev => [...prev, { role: 'ai', type: 'text', content: '', isStreaming: true }]);
+
+    const words = text.split(/(\s+)/);
+    let accumulated = '';
+    let delay = 0;
+    const chunkSize = 3; // words per chunk
+
+    for (let i = 0; i < words.length; i += chunkSize) {
+      const chunk = words.slice(i, i + chunkSize).join('');
+      delay += 15 + Math.random() * 15;
+
+      ((c, d) => {
+        setTimeout(() => {
+          accumulated += c;
+          const acc = accumulated;
+          setMessages(prev => {
+            const idx = prev.findIndex(msg => msg.role === 'ai' && msg.isStreaming);
+            if (idx === -1) return prev;
+            return [
+              ...prev.slice(0, idx),
+              { ...prev[idx], content: acc },
+              ...prev.slice(idx + 1)
+            ];
+          });
+        }, d);
+      })(chunk, delay);
+    }
+
+    // Mark streaming complete after all chunks
+    setTimeout(() => {
+      setMessages(prev => {
+        const idx = prev.findIndex(msg => msg.role === 'ai' && msg.isStreaming);
+        if (idx === -1) return prev;
+        return [
+          ...prev.slice(0, idx),
+          { ...prev[idx], isStreaming: false },
+          ...prev.slice(idx + 1)
+        ];
+      });
+      setStatusLabel('A su servicio');
+      setProcessing(false);
+    }, delay + 50);
+  }, []);
+
+  return { messages, sendMessage, showLocalGreeting, isConnected, isProcessing, statusLabel, onInputChange };
 };
