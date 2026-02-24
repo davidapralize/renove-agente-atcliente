@@ -1,21 +1,32 @@
-import { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useSocket } from './hooks/useSocket';
+import { getRandomGreeting } from './greetings';
+import { getRandomBubbleMessage, detectPageType } from './bubbleMessages';
 import { CarCarousel } from './components/CarCarousel';
 import { BookingConfirmation } from './components/BookingConfirmation';
 import { MessageCircle, X, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { marked } from 'marked';
 
+const BUBBLE_INITIAL_DELAY = 10000; // 10s para la primera burbuja
+const BUBBLE_FOLLOWUP_DELAY = 45000; // 45s para la segunda burbuja
+const BUBBLE_SESSION_KEY = 'renove_bubble_dismissed';
+
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const { messages, sendMessage, sendSilentMessage, isProcessing, statusLabel, onInputChange } = useSocket();
+  const { messages, sendMessage, showLocalGreeting, isProcessing, statusLabel, onInputChange } = useSocket();
   const [input, setInput] = useState('');
+  const [bubbleMessage, setBubbleMessage] = useState(null);
+  const [bubbleVisible, setBubbleVisible] = useState(false);
   const chatViewportRef = useRef(null);
   const chatOpenedRef = useRef(false);
   const aiStreamingRef = useRef(null);
   const lastScrolledAiIndexRef = useRef(-1);
   const inputRef = useRef(null);
   const scrollPosRef = useRef(0);
+  const bubbleTimerRef = useRef(null);
+  const followupTimerRef = useRef(null);
+  const bubblePhaseRef = useRef('initial'); // 'initial' | 'followup' | 'done'
 
   useEffect(() => {
     const viewport = chatViewportRef.current;
@@ -60,18 +71,81 @@ export default function ChatWidget() {
     });
   }, [messages, statusLabel]);
 
+  // --- Proactive bubble logic ---
+  const getCurrentPageUrl = useCallback(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const pageUrlParam = urlParams.get('page_url');
+      if (pageUrlParam) return decodeURIComponent(pageUrlParam);
+      if (window.parent && window.parent !== window) return window.parent.location.href;
+    } catch (e) { /* cross-origin */ }
+    return window.location.href;
+  }, []);
+
+  const dismissBubble = useCallback(() => {
+    setBubbleVisible(false);
+    setBubbleMessage(null);
+    clearTimeout(bubbleTimerRef.current);
+    clearTimeout(followupTimerRef.current);
+    bubblePhaseRef.current = 'done';
+    try { sessionStorage.setItem(BUBBLE_SESSION_KEY, '1'); } catch (e) {}
+  }, []);
+
+  const showBubble = useCallback((msg) => {
+    setBubbleMessage(msg);
+    setBubbleVisible(true);
+  }, []);
+
+  // Start bubble timers on mount (only if not dismissed this session)
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(BUBBLE_SESSION_KEY)) return;
+    } catch (e) {}
+
+    const pageType = detectPageType(getCurrentPageUrl());
+
+    bubbleTimerRef.current = setTimeout(() => {
+      if (bubblePhaseRef.current !== 'initial') return;
+      showBubble(getRandomBubbleMessage(pageType, 'initial'));
+
+      // Schedule followup
+      followupTimerRef.current = setTimeout(() => {
+        if (bubblePhaseRef.current !== 'initial') return;
+        bubblePhaseRef.current = 'followup';
+        showBubble(getRandomBubbleMessage(pageType, 'followup'));
+      }, BUBBLE_FOLLOWUP_DELAY);
+    }, BUBBLE_INITIAL_DELAY);
+
+    return () => {
+      clearTimeout(bubbleTimerRef.current);
+      clearTimeout(followupTimerRef.current);
+    };
+  }, [getCurrentPageUrl, showBubble]);
+
+  // Hide bubble when chat opens; dismiss permanently
+  useEffect(() => {
+    if (isOpen && bubblePhaseRef.current !== 'done') {
+      dismissBubble();
+    }
+  }, [isOpen, dismissBubble]);
+
+  const handleBubbleClick = () => {
+    dismissBubble();
+    setIsOpen(true);
+  };
+
   useEffect(() => {
     if (isOpen && !chatOpenedRef.current) {
       chatOpenedRef.current = true;
       if (messages.length === 0 && !isProcessing) {
         setTimeout(() => {
-          sendSilentMessage('Hola! Preséntate y cuéntame qué puedes hacer?');
+          showLocalGreeting(getRandomGreeting('general'));
         }, 300);
       }
     } else if (!isOpen) {
       chatOpenedRef.current = false;
     }
-  }, [isOpen, messages.length, isProcessing, sendSilentMessage]);
+  }, [isOpen, messages.length, isProcessing, showLocalGreeting]);
 
 
   const handleSubmit = (e) => {
@@ -222,6 +296,28 @@ export default function ChatWidget() {
                 <Send size={18} style={{ transform: 'rotate(45deg)' }} />
               </button>
             </footer>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {bubbleVisible && !isOpen && bubbleMessage && (
+          <motion.div
+            initial={{ opacity: 0, x: 20, scale: 0.9 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 10, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            className="proactive-bubble"
+            onClick={handleBubbleClick}
+          >
+            <span className="proactive-bubble-text">{bubbleMessage}</span>
+            <button
+              className="proactive-bubble-close"
+              onClick={(e) => { e.stopPropagation(); dismissBubble(); }}
+              aria-label="Cerrar"
+            >
+              <X size={14} />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
