@@ -83,9 +83,10 @@ export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const { messages, sendMessage, showLocalGreeting, isProcessing, statusLabel, onInputChange, detectedCar } = useSocket();
   const [input, setInput] = useState('');
-  const [bubbleTarget, setBubbleTarget] = useState(null);
+  const [bubbleTarget, setBubbleTarget] = useState(null);       // display text for typewriter
   const [bubbleVisible, setBubbleVisible] = useState(false);
-  const { displayText: bubbleDisplayText, isAnimating: bubbleAnimating } = useTypewriterTransition(bubbleTarget);
+  const bubbleUserMessageRef = useRef(null);                    // message sent on click
+  const { displayText: bubbleDisplayText, isAnimating: bubbleAnimating } = useTypewriterTransition(bubbleTarget, { pauseBetween: 1200 });
   const chatViewportRef = useRef(null);
   const chatOpenedRef = useRef(false);
   const aiStreamingRef = useRef(null);
@@ -153,6 +154,7 @@ export default function ChatWidget() {
   const dismissBubble = useCallback(() => {
     setBubbleVisible(false);
     setBubbleTarget(null);
+    bubbleUserMessageRef.current = null;
     clearTimeout(bubbleTimerRef.current);
     clearTimeout(followupTimerRef.current);
     bubblePhaseRef.current = 'done';
@@ -160,7 +162,14 @@ export default function ChatWidget() {
   }, []);
 
   const showBubble = useCallback((msg) => {
-    setBubbleTarget(msg);
+    // msg can be { bubble, userMessage } or a plain string (legacy)
+    if (msg && typeof msg === 'object' && msg.bubble) {
+      setBubbleTarget(msg.bubble);
+      bubbleUserMessageRef.current = msg.userMessage || null;
+    } else {
+      setBubbleTarget(msg);
+      bubbleUserMessageRef.current = null;
+    }
     setBubbleVisible(true);
   }, []);
 
@@ -195,8 +204,9 @@ export default function ChatWidget() {
     if (!detectedCar) return;
     if (isOpen || bubblePhaseRef.current === 'done') return;
 
-    // Switch bubble to car-specific message
-    showBubble(getRandomBubbleMessage('car', 'initial'));
+    // Switch bubble to car-specific message (pass car data for personalised text)
+    const carData = typeof detectedCar === 'object' ? detectedCar : null;
+    showBubble(getRandomBubbleMessage('car', 'initial', carData));
 
     // Reset followup timer for the new context
     clearTimeout(followupTimerRef.current);
@@ -216,8 +226,13 @@ export default function ChatWidget() {
   }, [isOpen, dismissBubble]);
 
   const handleBubbleClick = () => {
+    const userMsg = bubbleUserMessageRef.current;
     dismissBubble();
     setIsOpen(true);
+    // Send the user message automatically after the chat opens
+    if (userMsg) {
+      setTimeout(() => sendMessage(userMsg), 400);
+    }
   };
 
   useEffect(() => {
@@ -400,7 +415,7 @@ export default function ChatWidget() {
               <span className="proactive-bubble-dot"></span>
               <span className="proactive-bubble-name">Renove AI</span>
             </div>
-            <span className="proactive-bubble-text">{bubbleDisplayText}<span className={`bubble-cursor${bubbleAnimating ? ' typing' : ''}`}>|</span></span>
+            <span className="proactive-bubble-text">{bubbleDisplayText}{bubbleAnimating && <span className="bubble-cursor typing">|</span>}</span>
             <button
               className="proactive-bubble-close"
               onClick={(e) => { e.stopPropagation(); dismissBubble(); }}
