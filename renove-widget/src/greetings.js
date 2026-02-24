@@ -3,11 +3,11 @@ const GENERAL_GREETINGS = [
 
 Puedo ayudarte a:
 
-\u2022 Buscar coches en nuestro stock según lo que necesites (presupuesto, año, km, combustible, etiqueta, tipo de coche...)
-\u2022 Darte información detallada de cada vehículo
-\u2022 Reservar una prueba de conducción
-\u2022 Calcular opciones orientativas de financiación
-\u2022 Si no tenemos lo que buscas, tramitar una búsqueda a medida
+- Buscar coches en nuestro stock según lo que necesites (presupuesto, año, km, combustible, etiqueta, tipo de coche...)
+- Darte información detallada de cada vehículo
+- Reservar una prueba de conducción
+- Calcular opciones orientativas de financiación
+- Si no tenemos lo que buscas, tramitar una búsqueda a medida
 
 Cuéntame, ¿qué tipo de coche estás buscando?`,
 
@@ -15,11 +15,11 @@ Cuéntame, ¿qué tipo de coche estás buscando?`,
 
 Puedo:
 
-\u2022 Buscar en nuestro stock según tus preferencias
-\u2022 Darte detalles de equipamiento, estado y disponibilidad
-\u2022 Agendar una prueba de conducción (L\u2013V: 10:00\u201314:30 y 17:00\u201320:30, Sáb: 10:00\u201313:00)
-\u2022 Calcular financiación orientativa
-\u2022 Tramitar búsqueda personalizada si no tenemos lo que necesitas
+- Buscar en nuestro stock según tus preferencias
+- Darte detalles de equipamiento, estado y disponibilidad
+- Agendar una prueba de conducción (L\u2013V: 10:00\u201314:30 y 17:00\u201320:30, Sáb: 10:00\u201313:00)
+- Calcular financiación orientativa
+- Tramitar búsqueda personalizada si no tenemos lo que necesitas
 
 ¿Qué tipo de coche tienes en mente o cuál es tu presupuesto?`,
 
@@ -27,11 +27,11 @@ Puedo:
 
 Puedo ayudarte con todo lo relacionado con la compra de coche en Renove:
 
-\u2022 Encontrar tu coche ideal buscando en nuestro stock (según presupuesto, año, km, combustible, tipo de carrocería...)
-\u2022 Darte información detallada de los vehículos: características, estado, precio y disponibilidad
-\u2022 Reservar una prueba de conducción en nuestro concesionario
-\u2022 Explicarte opciones de financiación orientativas
-\u2022 Si no tenemos lo que buscas, tramitar una búsqueda personalizada
+- Encontrar tu coche ideal buscando en nuestro stock (según presupuesto, año, km, combustible, tipo de carrocería...)
+- Darte información detallada de los vehículos: características, estado, precio y disponibilidad
+- Reservar una prueba de conducción en nuestro concesionario
+- Explicarte opciones de financiación orientativas
+- Si no tenemos lo que buscas, tramitar una búsqueda personalizada
 
 Horario: L\u2013V 10:00\u201314:30 y 17:00\u201320:30; Sáb 10:00\u201313:00; Dom cerrado.
 
@@ -41,11 +41,11 @@ Si me dices qué tipo de coche buscas (o tu presupuesto y uso), te propongo opci
 
 Esto es lo que puedo hacer por ti:
 
-\u2022 Buscar coches en nuestro stock según lo que necesites (presupuesto, año, km, combustible, etiqueta, tipo de coche...)
-\u2022 Darte detalles de cada vehículo: equipamiento, características, disponibilidad
-\u2022 Reservar una prueba de conducción en nuestro horario
-\u2022 Calcular opciones orientativas de financiación (las condiciones finales se confirman en el concesionario)
-\u2022 Si no tenemos lo que buscas, puedo tramitar una búsqueda a medida
+- Buscar coches en nuestro stock según lo que necesites (presupuesto, año, km, combustible, etiqueta, tipo de coche...)
+- Darte detalles de cada vehículo: equipamiento, características, disponibilidad
+- Reservar una prueba de conducción en nuestro horario
+- Calcular opciones orientativas de financiación (las condiciones finales se confirman en el concesionario)
+- Si no tenemos lo que buscas, puedo tramitar una búsqueda a medida
 
 Si me dices qué tipo de coche buscas (presupuesto, uso, combustible...), te saco opciones de nuestro stock.`,
 
@@ -53,11 +53,11 @@ Si me dices qué tipo de coche buscas (presupuesto, uso, combustible...), te sac
 
 ¿En qué puedo ayudarte?
 
-\u2022 Buscar coches en stock según tus preferencias
-\u2022 Información detallada de cualquier vehículo
-\u2022 Reservar una prueba de conducción
-\u2022 Calcular financiación orientativa
-\u2022 Solicitar un vehículo a medida si no tenemos lo que buscas
+- Buscar coches en stock según tus preferencias
+- Información detallada de cualquier vehículo
+- Reservar una prueba de conducción
+- Calcular financiación orientativa
+- Solicitar un vehículo a medida si no tenemos lo que buscas
 
 Todos nuestros coches están revisados, con km certificados y entrega inmediata. Dime qué necesitas y te ayudo.`,
 
@@ -67,11 +67,11 @@ Con más de 30 años de experiencia, en Renove todos los vehículos están revis
 
 Puedo ayudarte con:
 
-\u2022 Búsqueda de coches en nuestro stock (presupuesto, año, km, combustible, etiqueta ECO/CERO...)
-\u2022 Información detallada de cada vehículo
-\u2022 Reserva de prueba de conducción
-\u2022 Opciones de financiación orientativas
-\u2022 Búsqueda personalizada a través de nuestros proveedores
+- Búsqueda de coches en nuestro stock (presupuesto, año, km, combustible, etiqueta ECO/CERO...)
+- Información detallada de cada vehículo
+- Reserva de prueba de conducción
+- Opciones de financiación orientativas
+- Búsqueda personalizada a través de nuestros proveedores
 
 ¿Qué tipo de coche estás buscando o cuál es tu presupuesto?`,
 
@@ -79,11 +79,11 @@ Puedo ayudarte con:
 
 Puedo ayudarte a:
 
-\u2022 Encontrar coche en nuestro stock según lo que busques (presupuesto, año, km, combustible, plazas, etiqueta...)
-\u2022 Darte información detallada de cada vehículo
-\u2022 Agendar una prueba de conducción
-\u2022 Calcular opciones de financiación orientativas
-\u2022 Tramitar una solicitud de vehículo a medida si no tenemos lo que necesitas
+- Encontrar coche en nuestro stock según lo que busques (presupuesto, año, km, combustible, plazas, etiqueta...)
+- Darte información detallada de cada vehículo
+- Agendar una prueba de conducción
+- Calcular opciones de financiación orientativas
+- Tramitar una solicitud de vehículo a medida si no tenemos lo que necesitas
 
 Cuéntame qué tienes en mente y te hago una selección ahora mismo.`,
 
@@ -91,11 +91,11 @@ Cuéntame qué tienes en mente y te hago una selección ahora mismo.`,
 
 ¿Cómo puedo ayudarte?
 
-\u2022 Buscar en nuestro stock según tus necesidades
-\u2022 Darte toda la información sobre cualquier vehículo
-\u2022 Reservar una prueba de conducción (L\u2013V: 10:00\u201314:30 y 17:00\u201320:30, Sáb: 10:00\u201313:00)
-\u2022 Calcular financiación orientativa
-\u2022 Solicitar un coche a medida a través de nuestros proveedores
+- Buscar en nuestro stock según tus necesidades
+- Darte toda la información sobre cualquier vehículo
+- Reservar una prueba de conducción (L\u2013V: 10:00\u201314:30 y 17:00\u201320:30, Sáb: 10:00\u201313:00)
+- Calcular financiación orientativa
+- Solicitar un coche a medida a través de nuestros proveedores
 
 Dime qué buscas y te propongo las mejores opciones.`,
 ];
