@@ -10,6 +10,7 @@ export const useSocket = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [statusLabel, setStatusLabel] = useState('A su servicio');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [detectedCar, setDetectedCar] = useState(null);
 
   const socketRef = useRef(null);
   const sessionIdRef = useRef(null);
@@ -77,6 +78,7 @@ export const useSocket = () => {
     });
 
     socket.on('car_detected', (data) => {
+      setDetectedCar(data.car_data || true);
 
       if (isProcessingRef.current) {
         pendingCarDetectionRef.current = data;
@@ -396,5 +398,5 @@ export const useSocket = () => {
     }, delay + 50);
   }, []);
 
-  return { messages, sendMessage, showLocalGreeting, isConnected, isProcessing, statusLabel, onInputChange };
+  return { messages, sendMessage, showLocalGreeting, isConnected, isProcessing, statusLabel, onInputChange, detectedCar };
 };
