@@ -165,6 +165,25 @@
     display: block;
 }
 
+.bubble-cursor {
+    display: inline-block;
+    width: 2px;
+    margin-left: 1px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 300;
+    animation: cursorBlink 1s step-end infinite;
+}
+
+.bubble-cursor.typing {
+    animation: none;
+    opacity: 1;
+}
+
+@keyframes cursorBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
 .proactive-bubble-close {
     position: absolute;
     top: 10px;
