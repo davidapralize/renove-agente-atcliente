@@ -14,7 +14,7 @@ const BUBBLE_SESSION_KEY = 'renove_bubble_dismissed';
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const { messages, sendMessage, showLocalGreeting, isProcessing, statusLabel, onInputChange } = useSocket();
+  const { messages, sendMessage, showLocalGreeting, isProcessing, statusLabel, onInputChange, detectedCar } = useSocket();
   const [input, setInput] = useState('');
   const [bubbleMessage, setBubbleMessage] = useState(null);
   const [bubbleVisible, setBubbleVisible] = useState(false);
@@ -122,6 +122,24 @@ export default function ChatWidget() {
     };
   }, [getCurrentPageUrl, showBubble]);
 
+  // Update bubble when car_detected fires (user navigated to a car page)
+  useEffect(() => {
+    if (!detectedCar) return;
+    if (isOpen || bubblePhaseRef.current === 'done') return;
+
+    // Switch bubble to car-specific message
+    showBubble(getRandomBubbleMessage('car', 'initial'));
+
+    // Reset followup timer for the new context
+    clearTimeout(followupTimerRef.current);
+    bubblePhaseRef.current = 'initial';
+    followupTimerRef.current = setTimeout(() => {
+      if (bubblePhaseRef.current !== 'initial') return;
+      bubblePhaseRef.current = 'followup';
+      showBubble(getRandomBubbleMessage('car', 'followup'));
+    }, BUBBLE_FOLLOWUP_DELAY);
+  }, [detectedCar, isOpen, showBubble]);
+
   // Hide bubble when chat opens; dismiss permanently
   useEffect(() => {
     if (isOpen && bubblePhaseRef.current !== 'done') {
@@ -202,7 +220,7 @@ export default function ChatWidget() {
                       ref={msg.isStreaming ? aiStreamingRef : null}
                       className={`message-bubble ${msg.role === 'user' ? 'user-msg' : 'ai-msg'} ${msg.isStreaming ? 'is-streaming' : ''}`}
                     >
-                      <span className="text-content" dangerouslySetInnerHTML={{ __html: marked.parse(msg.content) }} />
+                      <div className="text-content" dangerouslySetInnerHTML={{ __html: marked.parse(msg.content) }} />
                     </div>
                   );
                 }
@@ -303,20 +321,24 @@ export default function ChatWidget() {
       <AnimatePresence>
         {bubbleVisible && !isOpen && bubbleMessage && (
           <motion.div
-            initial={{ opacity: 0, x: 20, scale: 0.9 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 10, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            initial={{ opacity: 0, y: 10, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 6, scale: 0.96 }}
+            transition={{ type: 'spring', damping: 18, stiffness: 260 }}
             className="proactive-bubble"
             onClick={handleBubbleClick}
           >
+            <div className="proactive-bubble-header">
+              <span className="proactive-bubble-dot"></span>
+              <span className="proactive-bubble-name">Renove AI</span>
+            </div>
             <span className="proactive-bubble-text">{bubbleMessage}</span>
             <button
               className="proactive-bubble-close"
               onClick={(e) => { e.stopPropagation(); dismissBubble(); }}
               aria-label="Cerrar"
             >
-              <X size={14} />
+              <X size={12} />
             </button>
           </motion.div>
         )}
@@ -326,7 +348,7 @@ export default function ChatWidget() {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="chat-toggle-btn"
+        className={`chat-toggle-btn ${bubbleVisible && !isOpen ? 'has-bubble' : ''}`}
         aria-label={isOpen ? 'Cerrar chat' : 'Abrir chat'}
       >
         {isOpen ? <X size={28} /> : <MessageCircle size={28} />}
