@@ -86,6 +86,7 @@ export default function ChatWidget() {
   const [bubbleTarget, setBubbleTarget] = useState(null);       // display text for typewriter
   const [bubbleVisible, setBubbleVisible] = useState(false);
   const bubbleUserMessageRef = useRef(null);                    // message sent on click
+  const openedFromBubbleRef = useRef(false);                    // skip greeting when opened via bubble
   const { displayText: bubbleDisplayText, isAnimating: bubbleAnimating } = useTypewriterTransition(bubbleTarget, { pauseBetween: 1200 });
   const chatViewportRef = useRef(null);
   const chatOpenedRef = useRef(false);
@@ -228,6 +229,7 @@ export default function ChatWidget() {
   const handleBubbleClick = () => {
     const userMsg = bubbleUserMessageRef.current;
     dismissBubble();
+    if (userMsg) openedFromBubbleRef.current = true;
     setIsOpen(true);
     // Send the user message automatically after the chat opens
     if (userMsg) {
@@ -238,6 +240,11 @@ export default function ChatWidget() {
   useEffect(() => {
     if (isOpen && !chatOpenedRef.current) {
       chatOpenedRef.current = true;
+      // Skip greeting when the chat was opened by clicking a bubble message
+      if (openedFromBubbleRef.current) {
+        openedFromBubbleRef.current = false;
+        return;
+      }
       if (messages.length === 0 && !isProcessing) {
         setTimeout(() => {
           showLocalGreeting(getRandomGreeting('general'));
