@@ -101,31 +101,31 @@ Dime qué buscas y te propongo las mejores opciones.`,
 ];
 
 const CAR_GREETINGS = [
-  `\u00a1Hola! Veo que estás mirando el {make} {model} {version} ({year}) que tenemos por {price}: {fuel}, {transmission}, {power} CV, {mileage} y etiqueta {ecological_label}.
+  `\u00a1Hola! Veo que estás mirando el **{make} {model}** {version} ({year}) que tenemos por **{price}**: **{fuel}**, **{transmission}**, **{power} CV**, **{mileage}** y etiqueta **{ecological_label}**.
 
 \u00bfQué te gustaría saber? Puedo contarte sobre equipamiento, estado, historial, o si prefieres te preparo una simulación orientativa de financiación.`,
 
-  `\u00bfQué tal? Ese {make} {model} {version} ({year}) por {price} es una gran opción: {fuel}, {transmission}, {power} CV, {mileage}, etiqueta {ecological_label}.
+  `\u00bfQué tal? Ese **{make} {model}** {version} ({year}) por **{price}** es una gran opción: **{fuel}**, **{transmission}**, **{power} CV**, **{mileage}**, etiqueta **{ecological_label}**.
 
 \u00bfTe cuento más sobre este vehículo o prefieres que te busque alternativas similares en nuestro stock?`,
 
-  `Estás viendo nuestro {make} {model} {version} ({year}) por {price}: {fuel}, {transmission}, {power} CV, {mileage}, etiqueta {ecological_label}. Vehículo revisado, con km certificados y listo para entrega.
+  `Estás viendo nuestro **{make} {model}** {version} ({year}) por **{price}**: **{fuel}**, **{transmission}**, **{power} CV**, **{mileage}**, etiqueta **{ecological_label}**. Vehículo revisado, con km certificados y listo para entrega.
 
 \u00bfQuieres saber más sobre equipamiento, historial o financiación?`,
 
-  `\u00a1Hola! Veo que te interesa el {make} {model} {version} ({year}) que tenemos en Renove por {price}: {fuel}, {transmission}, {power} CV, {mileage}, etiqueta {ecological_label}.
+  `\u00a1Hola! Veo que te interesa el **{make} {model}** {version} ({year}) que tenemos en Renove por **{price}**: **{fuel}**, **{transmission}**, **{power} CV**, **{mileage}**, etiqueta **{ecological_label}**.
 
 \u00bfTe gustaría saber más sobre este vehículo: equipamiento, estado, mantenimiento? También puedo calcularte una financiación orientativa o buscarte alternativas similares.`,
 
-  `Ahora mismo estás viendo el {make} {model} {version} ({year}) que tenemos por {price}: {fuel}, {transmission}, {power} CV, {mileage} y etiqueta {ecological_label}. Es un vehículo nacional, con km certificados y revisión completa.
+  `Ahora mismo estás viendo el **{make} {model}** {version} ({year}) que tenemos por **{price}**: **{fuel}**, **{transmission}**, **{power} CV**, **{mileage}** y etiqueta **{ecological_label}**. Es un vehículo nacional, con km certificados y revisión completa.
 
 \u00bfQué quieres saber? Puedo darte detalles de equipamiento, historial, o prepararte una simulación de financiación.`,
 
-  `\u00bfTe gusta? El {make} {model} {version} ({year}) por {price}: {fuel}, {transmission}, {power} CV, {mileage}, etiqueta {ecological_label}. Vehículo revisado y con km certificados.
+  `\u00bfTe gusta? El **{make} {model}** {version} ({year}) por **{price}**: **{fuel}**, **{transmission}**, **{power} CV**, **{mileage}**, etiqueta **{ecological_label}**. Vehículo revisado y con km certificados.
 
 Dime qué te gustaría saber: equipamiento, estado, mantenimiento, financiación... o si prefieres que te busque opciones similares.`,
 
-  `Veo que estás echando un vistazo al {make} {model} {version} ({year}) por {price}. Es {fuel}, {transmission}, {power} CV, con {mileage} y etiqueta {ecological_label}.
+  `Veo que estás echando un vistazo al **{make} {model}** {version} ({year}) por **{price}**. Es **{fuel}**, **{transmission}**, **{power} CV**, con **{mileage}** y etiqueta **{ecological_label}**.
 
 \u00bfEn qué puedo ayudarte? Puedo darte más detalles, calcular financiación orientativa o buscar alternativas en nuestro stock.`,
 ];
