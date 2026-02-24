@@ -1,46 +1,89 @@
 // Mensajes proactivos para la burbuja junto al botón del chat.
 // Se muestran tras unos segundos para incentivar la interacción.
 
+// FICHA DE COCHE — El visitante ya muestra interés en un vehículo concreto.
+// Objetivo: resolver la última duda y empujar a la acción (contacto, prueba, financiación).
 const CAR_PAGE_MESSAGES = [
+  // Financiación / cuota — reduce la barrera del precio
   '¿Quieres saber la cuota mensual de este coche?',
-  '¿Tienes dudas sobre este vehículo? Te ayudo.',
-  '¿Te gustaría agendar una prueba de conducción?',
-  'Puedo darte más detalles de este coche.',
-  '¿Quieres saber el equipamiento completo?',
-  '¿Necesitas info sobre financiación para este coche?',
   '¿Quieres que te calcule la cuota de este vehículo?',
+  '¿Necesitas info sobre financiación para este coche?',
+  // Prueba de conducción — compromiso clave
+  '¿Te gustaría agendar una prueba de conducción?',
+  '¿Quieres probarlo? Podemos agendar una cita.',
+  // Urgencia / escasez — evita que posponga la decisión
+  'Es uno de los más consultados esta semana. ¿Te interesa?',
+  'Este vehículo lleva poco tiempo en stock. ¿Quieres más info?',
+  // Confianza / garantía — seguridad en compras >=20k€
+  'Este vehículo incluye garantía. ¿Te cuento las condiciones?',
   'Este coche tiene km certificados. ¿Te cuento más?',
+  // Equipamiento / detalles — resolver dudas técnicas
+  '¿Quieres saber el equipamiento completo?',
+  '¿Quieres comparar este coche con otros similares?',
+  // Entrega — elimina barrera geográfica
+  'Entregamos en toda España. ¿Te interesa este vehículo?',
 ];
 
+// LISTADO / STOCK — El visitante está explorando opciones.
+// Objetivo: que inicie conversación para cualificar y guiarle al coche ideal.
 const STOCK_PAGE_MESSAGES = [
-  '¿Buscas algo concreto? Te ayudo a encontrarlo.',
-  'Dime tu presupuesto y te propongo opciones.',
-  '¿No encuentras lo que buscas? Yo te ayudo.',
-  'Puedo filtrar coches por lo que necesites.',
-  '¿Necesitas un coche con etiqueta ECO o CERO?',
+  // Cualificación por presupuesto — abre la conversación con datos útiles
+  'Dime tu presupuesto y te propongo las mejores opciones.',
+  '¿Cuánto quieres pagar al mes? Te busco opciones que encajen.',
+  // Cualificación por uso — personaliza y genera confianza
+  '¿Quieres que te recomiende opciones según tu uso diario?',
   'Dime qué tipo de coche necesitas y te hago una selección.',
   '¿Buscas automático, diésel, híbrido? Cuéntame.',
-  '¿Quieres que te busque las mejores opciones en stock?',
+  // Búsqueda asistida — reduce fatiga de decisión
+  '¿Buscas algo concreto? Te ayudo a encontrarlo.',
+  '¿Necesitas un coche con etiqueta ECO o CERO?',
+  // Coches a la carta — retiene al que no encuentra lo que busca
+  '¿No encuentras lo que buscas? Podemos pedirlo a la carta.',
+  'Si no ves lo que buscas, te lo conseguimos a la carta.',
+  // Prueba de conducción — empuja a la acción
+  '¿Te gustaría probar alguno? Agendamos una prueba de conducción sin compromiso.',
+  // Novedades — crea motivo para volver
+  'Tenemos novedades cada semana. ¿Te cuento lo último?',
 ];
 
+// HOME / LANDING — Primer contacto, puede que aún no sepa qué quiere.
+// Objetivo: generar confianza, mostrar valor diferencial y abrir conversación.
 const HOME_MESSAGES = [
+  // Entrada fácil — baja la barrera para escribir
   '¿Estás buscando coche? Te ayudo a encontrarlo.',
-  '¿En qué puedo ayudarte hoy?',
   '¿Quieres ver qué coches tenemos disponibles?',
-  'Tenemos más de 30 años de experiencia. ¿Te ayudo?',
+  'Dime qué buscas y te propongo opciones al momento.',
+  // Presupuesto — cualifica rápido
   '¿Buscas coche? Dime tu presupuesto y te propongo opciones.',
-  '¿Necesitas asesoramiento para elegir tu coche?',
-  'Puedo ayudarte a encontrar tu coche ideal.',
-  '¿Tienes alguna duda? Estoy aquí para ayudarte.',
+  '¿Sabes que puedes financiar con cuotas a tu medida? Te cuento.',
+  // Diferenciadores — por qué Renove y no otro
+  'Todos nuestros coches tienen km certificados y garantía.',
+  'Entregamos en toda España. ¿Buscas algo en concreto?',
+  'Más de 30 años vendiendo coches en Madrid. ¿Te ayudo?',
+  // Coche a la carta — diferenciador fuerte
+  '¿Sabes que podemos conseguirte un coche a la carta?',
+  '¿No encuentras lo que buscas? Te lo conseguimos.',
+  // Asesoramiento — posiciona como experto, no como buscador
+  '¿Necesitas ayuda para elegir? Te asesoro sin compromiso.',
+  // Acción directa
+  '¿Quieres agendar una visita o prueba de conducción?',
 ];
 
-// Segunda burbuja (más directa, para ~45s después si no ha interactuado)
+// FOLLOW-UP — Segunda burbuja (~45s después). Último empujón.
+// Objetivo: eliminar fricción. Si no ha escrito, es por pereza o desconfianza. Atacar ambas.
 const FOLLOW_UP_MESSAGES = [
-  'Sin compromiso, solo respondo tus dudas.',
-  'Pregúntame lo que quieras sobre nuestros coches.',
-  'Estoy disponible si necesitas algo.',
-  'Miles de clientes ya nos han consultado.',
+  // Baja fricción — "es fácil y rápido"
+  'Solo te lleva 1 minuto. Pregúntame lo que necesites.',
+  'Te respondo en segundos, sin compromiso.',
   'Respondo al momento, sin esperas.',
+  // Sin compromiso — elimina miedo a presión comercial
+  'Sin compromiso, solo respondo tus dudas.',
+  'Sin presión. Solo quiero ayudarte a elegir bien.',
+  // Valor concreto — da un motivo para escribir
+  'Pregúntame precio, cuota, equipamiento... lo que quieras.',
+  'Puedo buscarte coches, calcular cuotas o agendar una visita.',
+  // Prueba social
+  'Cientos de clientes ya han comprado con nuestra ayuda.',
 ];
 
 /**
